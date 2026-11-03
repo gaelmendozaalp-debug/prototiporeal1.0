@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f8f6">
   <meta name="description" content="SnapDuty: organiza tu servicio social semana a semana. Cada hora de servicio, un cambio que cuenta.">
   <title>SnapDuty · Servicio social con propósito</title>
-  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="icon" type="image/png" href="/public/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -1392,7 +1392,7 @@
   <div class="app-shell">
     <aside class="sidebar" aria-label="Navegación principal">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true"><img class="gemini-brand-image" src="/logo.png" alt=""></div>
+        <div class="brand-mark" aria-hidden="true"><img class="gemini-brand-image" src="/public/logo.png" alt=""></div>
         <div><div class="brand-name">SnapDuty</div><div class="brand-note">SERVICIO SOCIAL CON PROPÓSITO</div></div>
       </div>
       <p class="nav-label">Tu espacio</p>
@@ -1779,7 +1779,7 @@
     (() => {
       "use strict";
 
-      const LOCAL_PREVIEW = true;
+      const LOCAL_PREVIEW = false;
       const TASKS_KEY = "marea_planner_activities_v1";
       const THEME_KEY = "servicio_social_theme";
       const SERVICE_TIMERS_KEY = "marea_daily_service_timers_v1";
@@ -1933,7 +1933,7 @@
       }
 
       function openAuthModal(msg = "") {
-        const loginUrl = new URL("/login.html", window.location.origin);
+        const loginUrl = new URL("/intex.html", window.location.origin);
         if (msg) loginUrl.searchParams.set("message", msg);
         window.location.replace(loginUrl);
       }
