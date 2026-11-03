@@ -1,0 +1,2921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f6">
+  <meta name="description" content="SnapDuty: organiza tu servicio social semana a semana. Cada hora de servicio, un cambio que cuenta.">
+  <title>SnapDuty · Servicio social con propósito</title>
+  <link rel="icon" type="image/svg+xml" href="public/snapduty-tree.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f7f8f6;
+      --surface: #fff;
+      --surface-soft: #f1f6f1;
+      --surface-strong: #e4eee6;
+      --text: #29342f;
+      --text-soft: #707a74;
+      --line: #dfe6e0;
+      --accent: #c27a91;
+      --accent-strong: #a95f78;
+      --accent-light: #e7c7d1;
+      --accent-wash: #fbf0f3;
+      --hero: #70515d;
+      --hero-2: #856976;
+      --hero-text: #f9f4f6;
+      --hero-muted: #e7d9de;
+      --hero-accent: #f0d7df;
+      --hero-surface: #80616d;
+      --focus-text: #e7d9de;
+      --focus-progress: #c6dfd1;
+      --shadow: 0 8px 24px rgba(56, 49, 52, .06);
+      --success: #59806b;
+      --warning: #9a7a4e;
+      --danger: #a85764;
+      --priority-high-bg: #f8e9ed;
+      --priority-high-text: #96566a;
+      --priority-medium-bg: #f6f0e5;
+      --priority-medium-text: #897650;
+      --priority-low-bg: #eaf2eb;
+      --priority-low-text: #597866;
+      --radius: 22px;
+    }
+
+    .dark {
+      color-scheme: dark;
+      --page: #151c28;
+      --surface: #1d2634;
+      --surface-soft: #232e3e;
+      --surface-strong: #303d50;
+      --text: #edf1f7;
+      --text-soft: #aab4c1;
+      --line: #354256;
+      --accent: #899bb7;
+      --accent-strong: #a9b8ce;
+      --accent-light: #566984;
+      --accent-wash: #28364a;
+      --hero: #202c3c;
+      --hero-2: #2b3a4f;
+      --hero-text: #edf1f7;
+      --hero-muted: #c0cad8;
+      --hero-accent: #c2cede;
+      --hero-surface: #2b394c;
+      --focus-text: #d3dce8;
+      --focus-progress: #a8b8ce;
+      --shadow: 0 8px 24px rgba(0, 0, 0, .18);
+      --success: #95a9c1;
+      --warning: #b5af9e;
+      --danger: #c3919d;
+      --priority-high-bg: #374254;
+      --priority-high-text: #d2dbe8;
+      --priority-medium-bg: #303c4f;
+      --priority-medium-text: #bdc9d9;
+      --priority-low-bg: #29364a;
+      --priority-low-text: #aab9ce;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 0; background: var(--page); scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+      font-family: "DM Sans", system-ui, sans-serif;
+      transition: background-color .25s, color .25s;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      position: relative;
+      isolation: isolate;
+      color: inherit;
+    }
+    button::before, button:not(.day-card.today)::after { display: none; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      outline-offset: 2px;
+    }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 232px minmax(0, 1fr); }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      backdrop-filter: blur(18px);
+      z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 2px 8px 32px; }
+    .brand-mark {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      flex: 0 0 44px; border-radius: 12px; color: white;
+      background: var(--accent-strong);
+      box-shadow: none;
+      font-size: 18px;
+    }
+    .gemini-brand-image { width: 42px; height: 42px; display: block; object-fit: contain; }
+    .brand-name { font-family: "DM Serif Display", Georgia, serif; font-size: 23px; line-height: 1; letter-spacing: -.03em; }
+    .brand-note { color: var(--text-soft); font-size: 10px; margin-top: 5px; letter-spacing: .04em; }
+    .nav-label { color: var(--text-soft); padding: 0 12px; margin: 0 0 9px; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 5px; }
+    .nav-link {
+      min-height: 46px; padding: 0 13px; display: flex; gap: 12px; align-items: center;
+      border: 0; border-radius: 13px; background: transparent; color: var(--text-soft);
+      cursor: pointer; text-align: left; font-size: 12px; font-weight: 700; transition: .2s ease;
+    }
+    .nav-link i { width: 17px; text-align: center; font-size: 14px; }
+    .nav-link:hover { background: var(--accent-wash); color: var(--text); }
+    .nav-link.active { background: var(--accent-wash); color: var(--accent-strong); box-shadow: inset 3px 0 var(--accent); }
+    .dark .nav-link.active { color: var(--accent-strong); box-shadow: inset 3px 0 var(--accent); }
+    .sidebar-spacer { flex: 1; }
+    .weekly-focus {
+      padding: 17px; border-radius: 12px; color: #fff;
+      background: var(--hero);
+      box-shadow: none;
+    }
+    .focus-top { display: flex; justify-content: space-between; align-items: center; color: var(--focus-text); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .focus-top i { font-size: 13px; }
+    .focus-value { margin-top: 12px; font-size: 24px; line-height: 1; font-weight: 800; letter-spacing: -.04em; }
+    .focus-value span { font-size: 11px; font-weight: 500; opacity: .74; letter-spacing: 0; }
+    .focus-caption { margin-top: 7px; color: var(--focus-text); font-size: 10px; }
+    .focus-track { height: 5px; margin-top: 14px; border-radius: 99px; background: rgba(255,255,255,.22); overflow: hidden; }
+    .focus-track span { height: 100%; display: block; width: 0; border-radius: inherit; background: var(--focus-progress); transition: width .4s ease; }
+    .sidebar-foot { padding: 16px 9px 0; color: var(--text-soft); font-size: 10px; line-height: 1.7; }
+
+    .main-shell { min-width: 0; padding: 28px clamp(20px, 4vw, 58px) 56px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 auto 28px; max-width: 1250px; }
+    .breadcrumb { color: var(--text-soft); font-size: 11px; }
+    .breadcrumb strong { color: var(--text); font-weight: 700; }
+    .top-actions { display: flex; align-items: center; gap: 9px; }
+    .db-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      min-height: 40px;
+      border-radius: 13px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 700;
+      transition: all .2s ease;
+      user-select: none;
+    }
+    .db-indicator-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warning);
+      transition: background-color .3s ease, box-shadow .3s ease;
+    }
+    .db-status-badge.connected {
+      color: var(--text);
+    }
+    .db-status-badge.connected .db-indicator-dot {
+      background: var(--success);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--success) 65%, transparent);
+    }
+    .db-status-badge.offline .db-indicator-dot {
+      background: var(--danger);
+    }
+    .icon-button, .secondary-button, .primary-button, .text-button {
+      border: 1px solid var(--line); cursor: pointer;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease;
+    }
+    .icon-button:hover, .secondary-button:hover, .primary-button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .icon-button {
+      width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px;
+      border-color: var(--line); background: linear-gradient(180deg, var(--surface), var(--surface-soft));
+      color: var(--text-soft); box-shadow: 0 1px 2px rgba(25, 35, 31, .06);
+    }
+    .icon-button:hover { border-color: var(--accent-light); background: var(--accent-wash); color: var(--accent-strong); box-shadow: 0 3px 8px color-mix(in srgb, var(--accent) 15%, transparent); }
+    .primary-button {
+      min-height: 42px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      border: 1px solid color-mix(in srgb, var(--accent-strong) 80%, #000); border-radius: 11px;
+      background: linear-gradient(180deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 90%, #000));
+      color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 3px 8px color-mix(in srgb, var(--accent-strong) 22%, transparent);
+    }
+    .dark .primary-button { color: #182130; }
+    .dark .auth-submit-btn { color: #182130; }
+    .primary-button:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 90%, #000), var(--accent-strong)); box-shadow: 0 5px 12px color-mix(in srgb, var(--accent-strong) 28%, transparent); }
+    .secondary-button {
+      min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 11px; background: linear-gradient(180deg, var(--surface), var(--surface-soft)); color: var(--text-soft); font-size: 10px; font-weight: 700;
+      box-shadow: 0 1px 2px rgba(25, 35, 31, .05);
+    }
+    .secondary-button:hover { border-color: var(--accent-light); background: var(--accent-wash); color: var(--accent-strong); box-shadow: 0 3px 8px color-mix(in srgb, var(--accent) 13%, transparent); }
+    .text-button { min-height: 34px; padding: 6px 9px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--text-soft); font-size: 10px; font-weight: 700; }
+    .text-button:hover { border-color: var(--line); background: var(--accent-wash); color: var(--accent-strong); }
+    .content { max-width: 1250px; margin: 0 auto; }
+    .view { display: none; animation: arrive .3s ease both; }
+    .view.active { display: block; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    html.compact .main-shell { padding-top: 20px; }
+    html.compact .topbar { margin-bottom: 18px; }
+    html.compact .brand { padding-bottom: 20px; }
+    html.compact .day-card { min-height: 82px; padding: 9px; }
+    html.compact .metric-card { min-height: 72px; padding: 12px; }
+    html.compact .agenda-panel { padding: 15px; }
+    html.compact .service-card { margin-top: 10px; padding: 12px; }
+    html.compact .task-row { padding: 10px 0; }
+    html.compact .side-panel { padding: 14px; }
+    html.compact .overview-stat { padding: 12px; }
+    html.compact .calendar-panel { padding: 14px; }
+
+    .week-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 19px; }
+    .week-heading { display: flex; align-items: center; gap: 13px; }
+    .week-heading h1, .page-heading h1 {
+      margin: 0; font-family: "DM Serif Display", Georgia, serif;
+      font-size: clamp(27px, 3vw, 37px); line-height: 1.1; font-weight: 400; letter-spacing: -.02em;
+    }
+    .week-heading p, .page-heading p { margin: 6px 0 0; color: var(--text-soft); font-size: 11px; }
+    .week-controls { display: flex; align-items: center; gap: 7px; }
+    .week-controls .icon-button { width: 35px; height: 35px; border-radius: 11px; }
+    .week-range { min-width: 116px; color: var(--text); text-align: center; font-size: 10px; font-weight: 800; }
+    .hero-panel {
+      min-height: 210px; padding: clamp(23px, 4vw, 38px); display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(200px, .45fr); align-items: center; gap: 22px;
+      position: relative; overflow: hidden; isolation: isolate; border-radius: 16px;
+      color: var(--hero-text); background: var(--hero);
+      box-shadow: var(--shadow);
+    }
+    .hero-panel::before, .hero-panel::after { content: none; }
+    .hero-copy { max-width: 620px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--hero-accent); font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .eyebrow i { font-size: 8px; }
+    .hero-copy h2 { margin: 13px 0 9px; font-family: "DM Serif Display", Georgia, serif; font-size: clamp(30px, 4.4vw, 49px); font-weight: 400; line-height: 1.02; letter-spacing: -.02em; }
+    .hero-copy h2 em { color: var(--hero-accent); font-weight: 400; }
+    .hero-copy p { max-width: 440px; margin: 0; color: var(--hero-muted); font-size: 11px; line-height: 1.8; }
+    .hero-summary { justify-self: end; min-width: 196px; padding: 18px; border: 1px solid color-mix(in srgb, var(--hero-text) 18%, transparent); border-radius: 12px; background: var(--hero-surface); }
+    .hero-summary-label { color: var(--hero-muted); font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .hero-summary-value { margin-top: 8px; font-size: 32px; line-height: 1; font-weight: 800; letter-spacing: -.06em; }
+    .hero-summary-value span { font-size: 12px; font-weight: 500; opacity: .72; letter-spacing: 0; }
+    .hero-summary-note { margin-top: 8px; color: var(--hero-muted); font-size: 9px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin: 17px 0 21px; }
+    .metric-card { min-height: 88px; padding: 16px 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: none; }
+    .metric-label { color: var(--text-soft); font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .metric-value { margin-top: 6px; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -.05em; }
+    .metric-icon { width: 39px; height: 39px; display: grid; place-items: center; flex: 0 0 39px; border-radius: 13px; background: var(--accent-wash); color: var(--accent-strong); }
+    .metric-card:nth-child(2) .metric-icon { background: color-mix(in srgb, var(--success) 12%, var(--surface)); color: var(--success); }
+    .metric-card:nth-child(3) .metric-icon { background: color-mix(in srgb, var(--warning) 13%, var(--surface)); color: var(--warning); }
+
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 27px 0 13px; }
+    .section-heading h2 { margin: 0; font-family: "DM Serif Display", Georgia, serif; font-size: 21px; font-weight: 400; }
+    .section-heading p { margin: 4px 0 0; color: var(--text-soft); font-size: 10px; }
+    .week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 9px; }
+    .day-card {
+      min-width: 0; min-height: 101px; padding: 12px 10px; position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; text-align: left; transition: .18s ease;
+    }
+    .day-card:hover { transform: translateY(-1px); border-color: var(--accent-light); box-shadow: none; }
+    .day-card.selected { border-color: var(--accent); background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent); }
+    .day-card.today::after { content: ""; width: 5px; height: 5px; position: absolute; top: 12px; right: 12px; border-radius: 50%; background: var(--accent); }
+    .day-name { display: block; color: var(--text-soft); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .day-number { display: block; margin-top: 7px; font-size: 21px; line-height: 1; font-weight: 700; }
+    .day-count { color: var(--text-soft); font-size: 9px; }
+    .day-count strong { color: var(--accent-strong); }
+    .day-dots { display: flex; gap: 4px; }
+    .day-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+    .day-dots span.done { background: var(--success); }
+
+    .planner-columns { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(230px, .72fr); gap: 15px; align-items: start; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: none; }
+    .agenda-panel { padding: 20px; }
+    .agenda-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+    .agenda-date { font-size: 13px; font-weight: 800; }
+    .agenda-subtitle { margin-top: 4px; color: var(--text-soft); font-size: 9px; }
+    .agenda-list { padding-top: 7px; }
+    .service-card { margin: 14px 0 7px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+    .service-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .service-heading { display: flex; align-items: center; gap: 10px; }
+    .service-icon { width: 35px; height: 35px; display: grid; place-items: center; flex: 0 0 35px; border-radius: 12px; background: var(--accent-light); color: var(--accent-strong); }
+    .service-heading h3 { margin: 0; font-size: 10px; font-weight: 800; }
+    .service-heading p { margin: 4px 0 0; color: var(--text-soft); font-size: 8px; }
+    .service-badge { padding: 5px 8px; border-radius: 999px; background: var(--surface); color: var(--accent-strong); font-size: 8px; font-weight: 800; white-space: nowrap; }
+    .service-badge.finished { background: color-mix(in srgb, var(--success) 13%, var(--surface)); color: var(--success); }
+    .service-meter-label { display: flex; justify-content: space-between; gap: 8px; margin: 13px 0 7px; color: var(--text-soft); font-size: 8px; font-weight: 700; }
+    .service-meter-label strong { color: var(--text); font-size: 9px; }
+    .service-segments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+    .service-segment { height: 8px; overflow: hidden; border-radius: 99px; background: var(--line); }
+    .service-segment span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width .4s ease; }
+    .service-segment:nth-child(4) span { background: var(--accent); }
+    .service-hour-labels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 5px; color: var(--text-soft); font-size: 7px; text-align: center; }
+    .service-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+    .service-time-field { display: grid; gap: 5px; min-width: 130px; }
+    .service-time-field label { color: var(--text-soft); font-size: 8px; font-weight: 800; }
+    .service-time-field input { height: 35px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); font-size: 10px; }
+    .service-target-field { max-width: 92px; }
+    .service-target-field input { width: 92px; }
+    .service-target-edit { display: flex; align-items: end; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+    .service-target-edit .secondary-button { min-height: 32px; }
+    .service-estimate { margin-left: auto; color: var(--text-soft); font-size: 8px; }
+    .service-estimate strong { color: var(--text); }
+    .service-start { min-height: 35px; padding: 0 11px; font-size: 9px; }
+    .service-notice { margin: 8px 0 0; color: var(--text-soft); font-size: 8px; }
+    .service-active-row { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+    .timer-orb { --progress: 0; width: 70px; height: 70px; position: relative; display: grid; place-items: center; flex: 0 0 70px; border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--progress) * 1%), var(--line) 0); }
+    .timer-orb::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--surface); }
+    .timer-orb span { z-index: 1; color: var(--text); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .service-active-copy { min-width: 0; }
+    .service-active-copy strong { display: block; font-size: 10px; }
+    .service-active-copy p { margin: 5px 0 0; color: var(--text-soft); font-size: 8px; line-height: 1.55; }
+    .service-timer-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+    .service-timer-actions .secondary-button, .service-timer-actions .primary-button { min-height: 32px; padding: 0 9px; font-size: 8px; }
+    .service-disabled { margin-top: 12px; padding: 10px 11px; border-radius: 11px; background: var(--surface); color: var(--text-soft); font-size: 9px; line-height: 1.55; }
+    .service-disabled strong { color: var(--text); }
+    .task-row { display: grid; grid-template-columns: 51px 15px minmax(0, 1fr) auto; gap: 11px; align-items: stretch; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .task-row:last-child { border-bottom: 0; }
+    .task-time { padding-top: 2px; color: var(--text-soft); font-size: 9px; font-weight: 700; text-align: right; }
+    .task-rail { position: relative; display: flex; justify-content: center; }
+    .task-rail::after { content: ""; position: absolute; top: 13px; bottom: -18px; width: 1px; background: var(--line); }
+    .task-row:last-child .task-rail::after { display: none; }
+    .task-dot { z-index: 1; width: 9px; height: 9px; margin-top: 4px; border: 2px solid var(--accent); border-radius: 50%; background: var(--surface); }
+    .task-row.is-done .task-dot { border-color: var(--success); background: var(--success); }
+    .task-main { min-width: 0; }
+    .task-title { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; }
+    .task-row.is-done .task-title-text { color: var(--text-soft); text-decoration: line-through; }
+    .task-category { margin-top: 5px; color: var(--text-soft); font-size: 9px; }
+    .task-note { margin-top: 6px; color: var(--text-soft); font-size: 9px; line-height: 1.5; }
+    .priority-tag, .status-tag { padding: 3px 7px; border-radius: 999px; font-size: 8px; font-weight: 800; }
+    .priority-high { background: var(--priority-high-bg); color: var(--priority-high-text); }
+    .priority-medium { background: var(--priority-medium-bg); color: var(--priority-medium-text); }
+    .priority-low { background: var(--priority-low-bg); color: var(--priority-low-text); }
+    .status-tag { background: var(--accent-wash); color: var(--accent-strong); }
+    .status-tag.done { background: color-mix(in srgb, var(--success) 13%, var(--surface)); color: var(--success); }
+    .task-actions { display: flex; align-items: flex-start; gap: 3px; }
+    .task-actions .icon-button { width: 29px; height: 29px; border: 0; background: transparent; font-size: 10px; }
+    .task-actions .icon-button:hover { background: var(--accent-wash); }
+    .task-actions .delete-button:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+    .empty-state { padding: 37px 14px 30px; text-align: center; }
+    .empty-icon { width: 48px; height: 48px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 16px; background: var(--accent-wash); color: var(--accent); font-size: 17px; }
+    .empty-state h3 { margin: 0; font-family: "DM Serif Display", Georgia, serif; font-size: 18px; font-weight: 400; }
+    .empty-state p { max-width: 250px; margin: 6px auto 14px; color: var(--text-soft); font-size: 9px; line-height: 1.65; }
+    .side-panel { padding: 18px; }
+    .side-panel + .side-panel { margin-top: 13px; }
+    .side-panel h3 { margin: 0; font-size: 11px; font-weight: 800; }
+    .side-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .side-panel-copy { margin: 6px 0 0; color: var(--text-soft); font-size: 9px; line-height: 1.55; }
+    .week-bars { height: 96px; margin-top: 17px; display: flex; align-items: end; justify-content: space-between; gap: 8px; }
+    .bar-item { height: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 7px; }
+    .bar-track { width: 100%; max-width: 22px; height: 70px; display: flex; align-items: end; overflow: hidden; border-radius: 7px; background: var(--accent-wash); }
+    .bar-fill { width: 100%; min-height: 0; border-radius: inherit; background: var(--accent); transition: height .3s ease; }
+    .bar-label { color: var(--text-soft); font-size: 8px; font-weight: 700; }
+    .goal-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 17px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--text-soft); font-size: 9px; }
+    .goal-row strong { color: var(--text); }
+    .goal-edit { width: 55px; padding: 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); color: var(--text); font-size: 10px; text-align: center; }
+    .upcoming-list { display: grid; gap: 10px; margin-top: 14px; }
+    .upcoming-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .upcoming-date { width: 35px; height: 37px; display: grid; place-content: center; flex: 0 0 35px; border-radius: 10px; background: var(--accent-wash); color: var(--accent-strong); text-align: center; }
+    .upcoming-date span { font-size: 7px; font-weight: 800; text-transform: uppercase; }
+    .upcoming-date strong { font-size: 13px; line-height: 1.1; }
+    .upcoming-copy { min-width: 0; }
+    .upcoming-copy strong { display: block; overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .upcoming-copy span { display: block; margin-top: 3px; color: var(--text-soft); font-size: 8px; }
+    .subtle-link { margin-top: 13px; padding: 0; border: 0; background: transparent; color: var(--accent-strong); cursor: pointer; font-size: 9px; font-weight: 800; }
+
+    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 0 0 22px; }
+    .calendar-panel { padding: 19px; }
+    .calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+    .calendar-month { font-size: 13px; font-weight: 800; text-transform: capitalize; }
+    .calendar-controls { display: flex; gap: 6px; }
+    .calendar-controls .icon-button { width: 32px; height: 32px; border-radius: 10px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+    .calendar-weekday { padding: 7px 0; color: var(--text-soft); font-size: 8px; font-weight: 800; text-align: center; text-transform: uppercase; }
+    .calendar-day {
+      min-height: 83px; padding: 8px 7px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+      border: 1px solid transparent; border-radius: 11px; background: var(--surface); cursor: pointer; text-align: left; transition: .16s ease;
+    }
+    .calendar-day:hover { border-color: var(--accent-light); background: var(--accent-wash); }
+    .calendar-day.outside { opacity: .37; }
+    .calendar-day.today .calendar-number { color: var(--accent-strong); }
+    .calendar-day.selected { border-color: var(--accent); background: var(--accent-wash); }
+    .calendar-number { font-size: 10px; font-weight: 800; }
+    .calendar-event { width: 100%; overflow: hidden; padding: 3px 5px; border-radius: 5px; background: var(--accent-light); color: var(--text); font-size: 7px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .dark .calendar-event { color: var(--text); }
+    .calendar-more { color: var(--text-soft); font-size: 7px; }
+    .calendar-detail { margin-top: 15px; padding: 16px; border-radius: 15px; background: var(--surface-soft); }
+    .calendar-detail h3 { margin: 0; font-size: 11px; }
+    .calendar-detail .agenda-list { padding-top: 4px; }
+    .calendar-detail .task-row { padding: 10px 0; }
+
+    .activity-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 13px; }
+    .search-field, .filter-select {
+      height: 38px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--text); font-size: 10px;
+    }
+    .search-field { min-width: 180px; flex: 1; padding: 0 12px; }
+    .filter-select { padding: 0 10px; }
+    .activity-list { padding: 5px 18px; }
+    .activity-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); }
+    .activity-item:last-child { border-bottom: 0; }
+    .activity-date { padding: 8px 4px; border-radius: 11px; background: var(--accent-wash); color: var(--accent-strong); text-align: center; }
+    .activity-date span { display: block; font-size: 7px; font-weight: 800; text-transform: uppercase; }
+    .activity-date strong { display: block; margin-top: 2px; font-size: 15px; }
+    .activity-title { font-size: 10px; font-weight: 800; }
+    .activity-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; color: var(--text-soft); font-size: 8px; }
+    .activity-actions { display: flex; gap: 3px; }
+    .activity-actions .icon-button { width: 30px; height: 30px; border: 0; background: transparent; }
+
+    .overview-hero { padding: 25px; border-radius: 14px; color: var(--hero-text); background: var(--hero); }
+    .overview-hero h2 { margin: 0; font-family: "DM Serif Display", Georgia, serif; font-size: 30px; font-weight: 400; }
+    .overview-hero p { margin: 7px 0 0; color: var(--hero-muted); font-size: 10px; }
+    .overview-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+    .overview-stat { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+    .overview-stat span { display: block; color: var(--text-soft); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .overview-stat strong { display: block; margin-top: 8px; font-size: 22px; letter-spacing: -.04em; }
+    .overview-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr); gap: 13px; }
+    .overview-panel { padding: 18px; }
+    .overview-panel h3 { margin: 0; font-size: 11px; }
+    .category-bars { display: grid; gap: 12px; margin-top: 18px; }
+    .category-row { display: grid; grid-template-columns: 105px minmax(0, 1fr) 28px; align-items: center; gap: 9px; font-size: 8px; }
+    .category-name { overflow: hidden; color: var(--text-soft); text-overflow: ellipsis; white-space: nowrap; }
+    .category-track { height: 7px; overflow: hidden; border-radius: 99px; background: var(--accent-wash); }
+    .category-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+    .category-count { color: var(--text-soft); text-align: right; }
+    .reflection-card { padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
+    .reflection-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--accent-wash); color: var(--accent-strong); }
+    .reflection-card h3 { margin: 13px 0 6px; font-family: "DM Serif Display", Georgia, serif; font-size: 18px; font-weight: 400; }
+    .reflection-card p { margin: 0; color: var(--text-soft); font-size: 9px; line-height: 1.65; }
+    .reflection-card textarea { width: 100%; min-height: 85px; margin-top: 12px; padding: 10px; resize: vertical; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-soft); color: var(--text); font-size: 9px; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; padding: 18px; background: rgba(25, 34, 46, .56); backdrop-filter: blur(7px); }
+    .modal-backdrop.open { display: grid; animation: arrive .18s ease both; }
+    .modal {
+      width: min(100%, 510px); max-height: min(92vh, 720px); overflow: auto;
+      padding: 22px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: 0 30px 80px rgba(8, 16, 27, .28);
+    }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 18px; }
+    .modal-header h2 { margin: 0; font-family: "DM Serif Display", Georgia, serif; font-size: 23px; font-weight: 400; }
+    .modal-header p { margin: 5px 0 0; color: var(--text-soft); font-size: 9px; }
+    .customization-modal { width: min(100%, 470px); }
+    .customization-groups { display: grid; gap: 18px; }
+    .customization-group { min-width: 0; margin: 0; padding: 0; border: 0; }
+    .customization-group + .customization-group { padding-top: 16px; border-top: 1px solid var(--line); }
+    .customization-label { display: block; margin: 0 0 10px; color: var(--text); font-size: 11px; font-weight: 800; }
+    .palette-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .palette-choice { min-width: 0; min-height: 65px; padding: 9px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text-soft); cursor: pointer; font-size: 9px; font-weight: 700; text-align: left; }
+    .palette-choice:hover { border-color: var(--accent-light); background: var(--accent-wash); color: var(--text); }
+    .palette-choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+    .palette-swatch { width: 21px; height: 21px; border: 2px solid color-mix(in srgb, var(--swatch) 28%, white); border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 2px var(--surface); }
+    .density-options { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+    .density-choice { min-height: 36px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--text-soft); cursor: pointer; font-size: 10px; font-weight: 700; }
+    .density-choice[aria-pressed="true"] { border-color: var(--line); background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(20, 30, 40, .08); }
+    .motion-setting { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .motion-setting .customization-label { margin: 0; }
+    .motion-switch { width: 46px; height: 27px; padding: 3px; flex: 0 0 46px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-strong); cursor: pointer; transition: background .2s, border-color .2s; }
+    .motion-switch span { width: 19px; height: 19px; display: block; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); transition: transform .2s; }
+    .motion-switch[aria-checked="true"] { border-color: var(--accent-strong); background: var(--accent-strong); }
+    .motion-switch[aria-checked="true"] span { transform: translateX(19px); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-field { min-width: 0; }
+    .form-field.wide { grid-column: 1 / -1; }
+    .form-field label { display: block; margin-bottom: 6px; color: var(--text-soft); font-size: 9px; font-weight: 800; }
+    .form-field input:not([type="radio"]), .form-field select, .form-field textarea {
+      width: 100%; min-height: 39px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface); color: var(--text); font-size: 10px;
+    }
+    .form-field textarea { min-height: 75px; resize: vertical; }
+    .category-field { min-width: 0; padding: 0; border: 0; }
+    .category-field legend { margin-bottom: 6px; color: var(--text-soft); font-size: 9px; font-weight: 800; }
+    .category-radio-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .category-option { min-width: 0; position: relative; }
+    .category-radio-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+    .category-option-content {
+      min-height: 40px; padding: 8px 10px; position: relative; display: flex; align-items: center; gap: 8px;
+      border-radius: 5px; background: var(--surface-soft); color: var(--text-soft); cursor: pointer; font-size: 10px; transition: background .2s, color .2s;
+    }
+    .category-option-content > i:first-child { width: 15px; flex: 0 0 15px; text-align: center; }
+    .category-option-content > span { min-width: 0; }
+    .category-option-check { margin-left: auto; opacity: 0; color: var(--accent-strong); }
+    .category-radio-input:hover + .category-option-content { background: var(--accent-wash); color: var(--text); }
+    .category-radio-input:checked + .category-option-content { background: var(--accent-wash); color: var(--text); box-shadow: inset 3px 0 var(--accent); }
+    .category-radio-input:checked + .category-option-content .category-option-check { opacity: 1; }
+    .category-radio-input:focus-visible { outline: none; }
+    .category-radio-input:focus-visible + .category-option-content { outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent); outline-offset: 2px; }
+    .modal-actions { display: flex; justify-content: space-between; align-items: center; gap: 9px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .modal-actions-right { display: flex; gap: 8px; }
+    .toast-container { position: fixed; z-index: 30; right: 20px; bottom: 20px; display: grid; gap: 8px; pointer-events: none; }
+    .toast { max-width: min(350px, calc(100vw - 40px)); padding: 12px 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow); font-size: 10px; animation: arrive .2s ease both; }
+    .toast.error { border-left: 3px solid var(--danger); }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.info { border-left: 3px solid var(--accent); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .hidden { display: none !important; }
+
+    /* ==================== LOGIN & AUTHENTICATION MODAL ==================== */
+    .auth-backdrop {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px;
+      background: rgba(22, 32, 27, .72);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 9999; opacity: 0; pointer-events: none;
+      transition: opacity .35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-backdrop.active { opacity: 1; pointer-events: auto; }
+    .auth-card {
+      width: 100%; max-width: 440px; background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px; padding: 32px 30px 28px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, .2);
+      transform: translateY(24px) scale(0.96);
+      transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative; overflow: hidden;
+    }
+    .auth-backdrop.active .auth-card { transform: translateY(0) scale(1); }
+    .auth-header { text-align: center; margin-bottom: 22px; }
+    .auth-logo-badge {
+      width: 60px; height: 60px; margin: 0 auto 14px; border-radius: 14px;
+      display: grid; place-items: center; font-size: 25px; color: white;
+      background: linear-gradient(180deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 90%, #000));
+      box-shadow: none;
+    }
+    .auth-logo-badge .gemini-brand-image { width: 38px; height: 38px; }
+    .auth-title { margin: 0; font-family: "DM Serif Display", Georgia, serif; font-size: 26px; letter-spacing: -.02em; }
+    .auth-subtitle { color: var(--text-soft); font-size: 11px; margin-top: 5px; }
+    .auth-tabs {
+      display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-soft);
+      padding: 4px; border-radius: 14px; margin-bottom: 18px; gap: 4px; border: 1px solid var(--line);
+    }
+    .auth-tab-btn {
+      padding: 9px 12px; border: 0; border-radius: 10px; background: transparent;
+      color: var(--text-soft); font-weight: 700; font-size: 12px; cursor: pointer; transition: all .2s ease;
+    }
+    .auth-tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15); }
+    .auth-form-group { display: grid; gap: 13px; }
+    .auth-field { display: flex; flex-direction: column; gap: 5px; }
+    .auth-field label { font-size: 10px; font-weight: 700; color: var(--text-soft); }
+    .auth-input-wrap { position: relative; display: flex; align-items: center; }
+    .auth-input-wrap i.field-icon { position: absolute; left: 14px; color: var(--text-soft); font-size: 13px; pointer-events: none; }
+    .auth-input {
+      width: 100%; height: 42px; padding: 0 14px 0 38px; border-radius: 12px;
+      border: 1px solid var(--line); background: var(--surface-soft); color: var(--text);
+      font-size: 12px; transition: border-color .2s, box-shadow .2s;
+    }
+    .auth-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .auth-toggle-pass {
+      position: absolute; right: 10px; background: transparent; border: 0;
+      color: var(--text-soft); cursor: pointer; padding: 6px; font-size: 13px;
+    }
+    .auth-toggle-pass:hover { color: var(--text); }
+    .auth-submit-btn {
+      height: 44px; border-radius: 12px; border: 0;
+      background: var(--accent-strong);
+      color: white; font-weight: 800; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-strong) 24%, transparent);
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease; margin-top: 4px;
+    }
+    .auth-submit-btn:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 90%, #000), var(--accent-strong)); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-strong) 30%, transparent); }
+    .auth-submit-btn:active { transform: translateY(1px); }
+    .auth-demo-section {
+      margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); text-align: center;
+    }
+    .auth-demo-label { font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 9px; }
+    .auth-demo-pills { display: flex; gap: 8px; justify-content: center; }
+    .auth-demo-pill {
+      flex: 1; padding: 8px 10px; background: var(--surface-soft); border: 1px solid var(--line);
+      border-radius: 10px; font-size: 11px; font-weight: 700; color: var(--text);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .2s ease;
+    }
+    .auth-demo-pill:hover { border-color: var(--accent); background: var(--accent-wash); color: var(--accent); }
+    .auth-error-banner {
+      background: color-mix(in srgb, var(--danger) 18%, transparent); border: 1px solid var(--danger);
+      color: var(--danger); padding: 9px 12px; border-radius: 11px; font-size: 11px;
+      margin-bottom: 14px; display: none; align-items: center; gap: 8px;
+    }
+    .auth-error-banner.active { display: flex; }
+
+    /* ==================== USER PROFILE MENU ==================== */
+    .user-profile-wrap { position: relative; }
+    .user-profile-btn {
+      display: flex; align-items: center; gap: 8px; padding: 3px 12px 3px 3px;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--surface-soft);
+      color: var(--text); cursor: pointer; font-size: 11px; font-weight: 700; transition: all .2s ease;
+    }
+    .user-profile-btn:hover { border-color: var(--accent); background: var(--accent-wash); }
+    .user-avatar-badge {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+      color: white; display: grid; place-items: center; font-size: 11px; font-weight: 800;
+    }
+    .user-profile-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0; width: 250px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+      padding: 12px; box-shadow: 0 15px 35px rgba(0, 0, 0, .28); display: none;
+      flex-direction: column; gap: 5px; z-index: 100; backdrop-filter: blur(14px);
+    }
+    .user-profile-dropdown.open { display: flex; animation: dropdownIn .2s ease forwards; }
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .user-dropdown-info { padding: 9px 11px; background: var(--surface-soft); border-radius: 12px; margin-bottom: 3px; }
+    .user-dropdown-name { font-weight: 800; font-size: 12px; color: var(--text); margin-bottom: 2px; }
+    .user-dropdown-email { font-size: 10px; color: var(--text-soft); word-break: break-all; }
+    .user-dropdown-inst { font-size: 9px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+    .user-dropdown-action {
+      padding: 9px 12px; border: 0; border-radius: 10px; background: transparent;
+      color: var(--text); font-size: 11px; font-weight: 700; text-align: left;
+      display: flex; align-items: center; gap: 9px; cursor: pointer; transition: all .15s ease;
+    }
+    .user-dropdown-action:hover { background: var(--accent-wash); color: var(--accent); }
+    .user-dropdown-action.danger:hover { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
+    @media (min-width: 761px) and (max-width: 1100px) {
+      .app-shell { grid-template-columns: 205px minmax(0, 1fr); }
+      .main-shell { padding-right: 24px; padding-left: 24px; }
+      .planner-columns { grid-template-columns: minmax(0, 1fr) 235px; }
+      .overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .app-shell { display: block; }
+      .sidebar { position: sticky; top: 0; width: 100%; height: auto; min-height: 58px; padding: 9px 12px; flex-direction: row; align-items: center; gap: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { flex: 0 0 auto; gap: 8px; padding: 0; }
+      .brand-mark { width: 36px; height: 36px; flex-basis: 36px; border-radius: 12px; font-size: 15px; }
+      .brand-name { font-size: 19px; }
+      .brand-note, .nav-label, .weekly-focus, .sidebar-foot, .sidebar-spacer { display: none; }
+      .side-nav { min-width: 0; flex: 1; display: flex; justify-content: flex-start; gap: 3px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .nav-link { flex: 0 0 auto; min-height: 40px; padding: 0 10px; gap: 6px; border-radius: 10px; font-size: 9px; white-space: nowrap; }
+      .nav-link i { width: auto; font-size: 11px; }
+      .nav-link.active { box-shadow: inset 0 -2px var(--accent); }
+      .main-shell { padding: 17px 15px 38px; }
+      .topbar { min-width: 0; flex-wrap: wrap; margin-bottom: 20px; }
+      .breadcrumb { font-size: 9px; }
+      .top-actions { min-width: 0; max-width: 100%; gap: 6px; }
+      .user-profile-btn { min-width: 0; max-width: min(210px, 34vw); }
+      #userProfileName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .icon-button { width: 36px; height: 36px; }
+      .primary-button { min-height: 38px; padding: 0 12px; font-size: 10px; }
+      .planner-columns { grid-template-columns: 1fr; }
+      .aside-column { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .side-panel + .side-panel { margin-top: 0; }
+    }
+    @media (max-width: 520px) {
+      .main-shell { padding: 14px 12px 30px; }
+      .topbar { align-items: center; }
+      .breadcrumb { display: none; }
+      .top-actions { width: 100%; justify-content: space-between; }
+      .top-actions .export-button { display: none; }
+      .db-status-badge span#dbStatusText { display: none; }
+      .db-status-badge { padding: 0 10px; min-height: 38px; }
+      .user-profile-btn { max-width: min(150px, 35vw); }
+      .week-toolbar { align-items: flex-start; flex-direction: column; }
+      .week-controls { align-self: stretch; justify-content: space-between; }
+      .week-controls .week-range { flex: 1; }
+      .hero-panel { grid-template-columns: 1fr; gap: 17px; }
+      .hero-summary { justify-self: stretch; min-width: 0; padding: 14px; }
+      .hero-summary-value { display: inline-block; margin-right: 8px; }
+      .hero-summary-note { display: inline; }
+      .metrics { gap: 7px; }
+      .metric-card { min-width: 0; min-height: 80px; padding: 12px 10px; align-items: flex-start; flex-direction: column-reverse; gap: 5px; }
+      .metric-icon { width: 28px; height: 28px; flex-basis: 28px; border-radius: 9px; font-size: 11px; }
+      .metric-label { font-size: 7px; }
+      .metric-value { font-size: 17px; }
+      .week-strip { min-width: 0; grid-template-columns: repeat(7, minmax(52px, 1fr)); gap: 4px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+      .day-card { min-height: 84px; padding: 9px 7px; border-radius: 12px; scroll-snap-align: start; }
+      .day-name { font-size: 7px; }
+      .day-number { font-size: 18px; }
+      .day-count { max-width: 100%; overflow-wrap: anywhere; font-size: 7px; }
+      .task-row { grid-template-columns: 40px 10px minmax(0, 1fr); gap: 8px; }
+      .task-actions { grid-column: 3; justify-content: flex-end; margin-top: -4px; }
+      .agenda-panel { padding: 14px; }
+      .service-card { padding: 12px; }
+      .service-controls { align-items: stretch; }
+      .service-time-field { flex: 1; }
+      .service-start { flex: 1; }
+      .service-estimate { width: 100%; margin: 1px 0 0; }
+      .aside-column { grid-template-columns: 1fr; }
+      .calendar-panel { padding: 12px 8px; }
+      .calendar-grid { gap: 2px; }
+      .calendar-day { min-height: 63px; padding: 5px 3px; border-radius: 8px; }
+      .calendar-event { padding: 2px 3px; font-size: 6px; }
+      .calendar-weekday { font-size: 7px; }
+      .activity-list { padding: 3px 11px; }
+      .activity-item { grid-template-columns: 36px minmax(0,1fr) auto; gap: 8px; }
+      .activity-actions .icon-button { width: 26px; height: 26px; }
+      .overview-grid { grid-template-columns: 1fr; }
+      .overview-stats { gap: 7px; }
+      .overview-stat { padding: 12px; }
+      .overview-stat strong { font-size: 18px; }
+      .category-row { grid-template-columns: 85px minmax(0,1fr) 22px; }
+      .page-heading { align-items: flex-start; flex-direction: column; }
+      .search-field { min-width: 100%; }
+      .filter-select { flex: 1; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.wide { grid-column: auto; }
+      .category-radio-list { grid-template-columns: 1fr; }
+      .modal-backdrop { align-items: start; padding: 12px; }
+      .modal { width: 100%; max-height: calc(100dvh - 24px); padding: 16px; border-radius: 18px; }
+      .auth-backdrop { align-items: flex-start; overflow-y: auto; padding: 12px; }
+      .auth-card { max-width: 440px; margin: auto; padding: 26px 20px 22px; border-radius: 22px; }
+      .customization-modal { padding: 18px; }
+      .toast-container { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; }
+      .toast { max-width: none; }
+    }
+    @media (max-width: 380px) {
+      .sidebar { gap: 7px; padding-right: 8px; padding-left: 9px; }
+      .brand { gap: 6px; }
+      .brand-mark { width: 32px; height: 32px; flex-basis: 32px; }
+      .brand-name { font-size: 17px; }
+      .nav-link { min-height: 38px; padding: 0 8px; }
+      .main-shell { padding-right: 10px; padding-left: 10px; }
+      #newActivityButton { width: 38px; padding: 0; }
+      #newActivityButton span, #userProfileName { display: none; }
+      .week-controls { gap: 5px; }
+      .week-controls .week-range { min-width: 0; font-size: 9px; }
+      .week-controls #thisWeek { padding: 0 9px; }
+      .calendar-number { font-size: 9px; }
+      .activity-item { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 6px; }
+      .modal-actions { align-items: stretch; flex-direction: column-reverse; }
+      .modal-actions-right { justify-content: flex-end; }
+    }
+    .nav-label { font-size: 10px; }
+    .nav-link { font-size: 12px; }
+    .brand-note { font-size: 10px; }
+    .breadcrumb { font-size: 12px; }
+    .db-status-badge { font-size: 12px; }
+    .secondary-button { font-size: 11px; }
+    .week-heading h1, .page-heading h1 { font-size: 32px; }
+    .week-heading p, .page-heading p { font-size: 12px; }
+    .week-range { font-size: 12px; }
+    .eyebrow { font-size: 10px; }
+    .hero-copy h2 { font-size: 42px; }
+    .hero-copy p { font-size: 13px; }
+    .hero-summary-label { font-size: 10px; }
+    .hero-summary-note { font-size: 10px; }
+    .metric-label { font-size: 10px; }
+    .metric-value { font-size: 24px; }
+    .section-heading p { font-size: 11px; }
+    .day-name { font-size: 10px; }
+    .day-count { font-size: 10px; }
+    .agenda-date { font-size: 15px; }
+    .agenda-subtitle { font-size: 10px; }
+    .service-heading h3, .side-panel h3 { font-size: 12px; }
+    .service-heading p, .side-panel-copy { font-size: 10px; }
+    .service-meter-label { font-size: 10px; }
+    .service-active-copy strong, .task-title, .activity-title { font-size: 12px; }
+    .service-active-copy p, .task-category, .task-note { font-size: 10px; }
+    .overview-hero p { font-size: 12px; }
+    .overview-stat span { font-size: 9px; }
+    .form-field label, .category-field legend { font-size: 10px; }
+    @media (max-width: 520px) {
+      .hero-copy h2 { font-size: 32px; }
+      .hero-copy p { font-size: 12px; }
+      .nav-link { font-size: 10px; }
+      .day-name, .day-count { font-size: 9px; }
+      .service-active-copy p, .task-category, .task-note { font-size: 10px; }
+      .task-title, .activity-title { font-size: 11px; }
+    }
+    @media (max-height: 560px) and (max-width: 520px) {
+      .auth-backdrop { align-items: flex-start; }
+      .auth-card { margin: 0 auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+
+    /* SnapDuty: capa de diseno para pruebas locales */
+    :root {
+      --on-accent: #fff;
+      --r-sm: 10px; --r-md: 14px; --r-lg: 20px;
+      --sh-1: 0 1px 2px rgba(30,25,35,.05), 0 1px 3px rgba(30,25,35,.04);
+      --sh-2: 0 4px 14px rgba(30,25,35,.07), 0 1px 3px rgba(30,25,35,.05);
+      --sh-3: 0 14px 34px rgba(30,25,35,.12);
+    }
+    .dark { --on-accent: #142033; --sh-1: 0 1px 2px rgba(0,0,0,.3); --sh-2: 0 4px 14px rgba(0,0,0,.25); --sh-3: 0 14px 34px rgba(0,0,0,.4); }
+
+    /* Base */
+    body {
+      font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(900px 420px at 85% -80px, color-mix(in srgb, var(--accent) 13%, transparent), transparent 70%),
+        var(--page);
+      background-attachment: fixed;
+    }
+    .app-shell { grid-template-columns: 264px minmax(0, 1fr); }
+
+    /* Barra lateral */
+    .sidebar { padding: 26px 18px 20px; background: var(--surface); box-shadow: 1px 0 0 var(--line), 6px 0 24px rgba(30,25,35,.03); backdrop-filter: none; }
+    .brand { padding: 0 6px 30px; }
+    .brand-mark { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(145deg, var(--accent), var(--accent-strong)); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-strong) 35%, transparent); }
+    .brand-name { font-size: 25px; }
+    .brand-note { font-size: 9px; letter-spacing: .1em; color: var(--text-soft); }
+    .nav-label { font-size: 11px; letter-spacing: .14em; padding: 0 12px; margin-bottom: 10px; }
+    .side-nav { gap: 6px; }
+    .nav-link { min-height: 48px; padding: 0 14px; border-radius: 14px; font-size: 14px; font-weight: 600; gap: 13px; position: relative; }
+    .nav-link i { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-soft); font-size: 14px; transition: .2s; }
+    .nav-link:hover { background: var(--accent-wash); }
+    .nav-link:hover i { background: var(--surface); color: var(--accent-strong); }
+    .nav-link.active, .dark .nav-link.active { background: var(--accent-wash); color: var(--text); font-weight: 700; box-shadow: none; }
+    .nav-link.active i { background: linear-gradient(145deg, var(--accent), var(--accent-strong)); color: var(--on-accent); box-shadow: 0 4px 10px color-mix(in srgb, var(--accent-strong) 30%, transparent); }
+    .nav-link.active::after { content: ""; position: absolute; right: 12px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-strong); }
+    .weekly-focus { padding: 20px; border-radius: var(--r-lg); background: linear-gradient(145deg, var(--hero), color-mix(in srgb, var(--hero) 70%, var(--accent))); box-shadow: var(--sh-2); position: relative; overflow: hidden; }
+    .weekly-focus::after { content: ""; position: absolute; width: 120px; height: 120px; right: -40px; top: -40px; border-radius: 50%; background: rgba(255,255,255,.08); }
+    .focus-top { font-size: 11px; }
+    .focus-value { font-size: 32px; margin-top: 14px; }
+    .focus-value span { font-size: 13px; }
+    .focus-caption { font-size: 12px; margin-top: 8px; }
+    .focus-track { height: 7px; margin-top: 16px; }
+    .sidebar-foot { font-size: 12px; padding: 18px 8px 0; text-align: center; }
+
+    /* Barra superior */
+    .main-shell { padding: 0 clamp(20px, 3.4vw, 52px) 64px; }
+    .topbar { position: sticky; top: 0; z-index: 8; max-width: none; margin: 0 calc(clamp(20px, 3.4vw, 52px) * -1) 30px; padding: 14px clamp(20px, 3.4vw, 52px); background: color-mix(in srgb, var(--page) 82%, transparent); backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+    .breadcrumb { font-size: 13px; }
+    .breadcrumb strong { font-weight: 700; }
+    .top-actions { gap: 10px; }
+    .db-status-badge { min-height: 42px; border-radius: 999px; font-size: 12px; box-shadow: var(--sh-1); }
+    .icon-button { width: 42px; height: 42px; border-radius: 13px; background: var(--surface); box-shadow: var(--sh-1); }
+    .secondary-button { min-height: 42px; padding: 0 16px; border-radius: 12px; font-size: 13px; font-weight: 600; background: var(--surface); box-shadow: var(--sh-1); }
+    .primary-button { min-height: 44px; padding: 0 20px; border-radius: 12px; font-size: 13px; font-weight: 700; letter-spacing: .01em; color: var(--on-accent); background: linear-gradient(145deg, var(--accent), var(--accent-strong)); border-color: transparent; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-strong) 32%, transparent); }
+    .primary-button:hover { background: linear-gradient(145deg, var(--accent-strong), var(--accent-strong)); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent-strong) 40%, transparent); }
+    .user-profile-btn { padding: 4px 14px 4px 4px; background: var(--surface); box-shadow: var(--sh-1); font-size: 13px; }
+    .user-avatar-badge { width: 34px; height: 34px; font-size: 12px; }
+    .user-profile-dropdown { border-radius: var(--r-md); box-shadow: var(--sh-3); }
+    .content { max-width: 1280px; }
+
+    /* Encabezados */
+    .week-heading h1, .page-heading h1 { font-size: clamp(28px, 3vw, 38px); }
+    .week-heading p, .page-heading p { font-size: 14px; margin-top: 8px; }
+    .week-toolbar { margin-bottom: 22px; }
+    .week-controls { padding: 5px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--sh-1); }
+    .week-controls .icon-button { box-shadow: none; border-color: transparent; background: transparent; width: 36px; height: 36px; }
+    .week-controls .secondary-button { min-height: 36px; box-shadow: none; }
+    .week-range { font-size: 13px; min-width: 130px; }
+    .section-heading { margin: 34px 0 16px; }
+    .section-heading h2 { font-size: 24px; }
+    .section-heading p { font-size: 13px; }
+
+    /* Hero */
+    .hero-panel { min-height: 250px; border-radius: 26px; padding: clamp(28px, 4vw, 46px); background: linear-gradient(125deg, var(--hero) 0%, color-mix(in srgb, var(--hero) 62%, var(--accent)) 100%); box-shadow: var(--sh-3); }
+    .hero-panel::before, .hero-panel::after { content: ""; position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; }
+    .hero-panel::before { width: 360px; height: 360px; right: -90px; top: -150px; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 68%); }
+    .hero-panel::after { width: 260px; height: 260px; left: 38%; bottom: -150px; background: radial-gradient(circle, rgba(255,255,255,.10), transparent 70%); }
+    .eyebrow { font-size: 11px; padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); letter-spacing: .1em; }
+    .hero-copy h2 { font-size: clamp(34px, 4.6vw, 52px); margin: 18px 0 12px; }
+    .hero-copy p { font-size: 15px; max-width: 480px; line-height: 1.7; }
+    .hero-summary { padding: 24px; border-radius: 20px; background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(10px); }
+    .hero-summary-label { font-size: 11px; letter-spacing: .1em; }
+    .hero-summary-value { font-size: 46px; margin-top: 12px; }
+    .hero-summary-value span { font-size: 15px; }
+    .hero-summary-note { font-size: 12px; margin-top: 10px; line-height: 1.5; }
+
+    /* Metricas */
+    .metrics { gap: 16px; margin: 20px 0 6px; }
+    .metric-card { min-height: 100px; padding: 20px 22px; border-radius: var(--r-lg); box-shadow: var(--sh-1); position: relative; overflow: hidden; transition: .2s; }
+    .metric-card::before { content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent); }
+    .metric-card:nth-child(2)::before { background: var(--success); }
+    .metric-card:nth-child(3)::before { background: var(--warning); }
+    .metric-card:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+    .metric-label { font-size: 11px; letter-spacing: .09em; }
+    .metric-value { font-size: 30px; margin-top: 8px; }
+    .metric-icon { width: 46px; height: 46px; flex-basis: 46px; border-radius: 14px; font-size: 18px; }
+
+    /* Semana */
+    .week-strip { gap: 12px; }
+    .day-card { min-height: 120px; padding: 15px 14px; border-radius: 16px; box-shadow: var(--sh-1); }
+    .day-card:hover { box-shadow: var(--sh-2); transform: translateY(-3px); }
+    .day-name { font-size: 11px; letter-spacing: .1em; }
+    .day-number { font-size: 28px; margin-top: 8px; }
+    .day-count { font-size: 12px; }
+    .day-dots span { width: 7px; height: 7px; }
+    .day-card.today::after { width: 8px; height: 8px; top: 14px; right: 14px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+    .day-card.selected, .day-card.selected:hover { background: linear-gradient(150deg, var(--accent), var(--accent-strong)); border-color: transparent; box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-strong) 38%, transparent); }
+    .day-card.selected .day-name, .day-card.selected .day-number, .day-card.selected .day-count, .day-card.selected .day-count strong { color: var(--on-accent); }
+    .day-card.selected .day-dots span { background: var(--on-accent); opacity: .85; }
+    .day-card.selected::after { background: var(--on-accent); box-shadow: 0 0 0 4px rgba(255,255,255,.25); }
+    .planner-columns { gap: 20px; }
+    .panel { border-radius: var(--r-lg); box-shadow: var(--sh-1); }
+    .agenda-panel { padding: 26px; }
+    .agenda-head { padding-bottom: 18px; }
+    .agenda-date { font-size: 18px; text-transform: capitalize; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .agenda-subtitle { font-size: 12px; }
+
+    /* Cronometro / servicio */
+    .service-card { padding: 22px; border-radius: 18px; margin: 18px 0 10px; background: linear-gradient(160deg, var(--accent-wash), var(--surface-soft)); border-color: color-mix(in srgb, var(--accent) 22%, var(--line)); }
+    .service-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; background: linear-gradient(145deg, var(--accent), var(--accent-strong)); color: var(--on-accent); font-size: 16px; }
+    .service-heading h3 { font-size: 14px; }
+    .service-heading p { font-size: 12px; }
+    .service-badge { font-size: 11px; padding: 6px 12px; box-shadow: var(--sh-1); }
+    .service-meter-label { font-size: 12px; margin: 18px 0 9px; }
+    .service-meter-label strong { font-size: 13px; }
+    .service-segments { gap: 6px; }
+    .service-segment { height: 11px; background: color-mix(in srgb, var(--line) 80%, var(--surface)); }
+    .service-hour-labels { font-size: 10px; margin-top: 6px; }
+    .service-time-field label { font-size: 11px; }
+    .service-time-field input { height: 40px; border-radius: 11px; font-size: 13px; }
+    .service-target-field input { width: 100px; }
+    .service-estimate { font-size: 11px; line-height: 1.4; }
+    .service-estimate strong { font-size: 15px; }
+    .service-notice, .service-disabled { font-size: 12px; line-height: 1.6; }
+    .service-disabled { padding: 14px 16px; border-radius: 13px; }
+    .timer-orb { width: 96px; height: 96px; flex-basis: 96px; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .timer-orb::before { inset: 7px; }
+    .timer-orb span { font-size: 14px; }
+    .service-active-row { gap: 20px; }
+    .service-active-copy strong { font-size: 15px; }
+    .service-active-copy p { font-size: 12px; }
+    .service-timer-actions .secondary-button, .service-timer-actions .primary-button { font-size: 12px; min-height: 38px; padding: 0 14px; }
+
+    /* Tareas */
+    .task-row { padding: 18px 8px; margin: 0 -8px; border-radius: 12px; transition: background .15s; grid-template-columns: 66px 15px minmax(0,1fr) auto; }
+    .task-row:hover { background: color-mix(in srgb, var(--accent-wash) 70%, transparent); }
+    .task-time { font-size: 12px; }
+    .task-title { font-size: 15px; }
+    .task-category, .task-note { font-size: 12px; }
+    .priority-tag, .status-tag { font-size: 10px; padding: 4px 9px; letter-spacing: .02em; }
+    .task-dot { width: 11px; height: 11px; }
+    .task-actions .icon-button { width: 34px; height: 34px; font-size: 13px; }
+    .empty-state { padding: 46px 16px 38px; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 20px; font-size: 24px; }
+    .empty-state h3 { font-size: 22px; }
+    .empty-state p { font-size: 13px; max-width: 300px; line-height: 1.6; }
+
+    /* Panel lateral derecho */
+    .side-panel { padding: 22px; }
+    .side-panel + .side-panel { margin-top: 18px; }
+    .side-panel h3 { font-size: 14px; }
+    .side-panel-copy { font-size: 12px; }
+    .week-bars { height: 120px; }
+    .bar-track { height: 92px; max-width: 26px; border-radius: 9px; }
+    .bar-label { font-size: 11px; }
+    .goal-row { font-size: 12px; }
+    .upcoming-item { padding: 8px; margin: 0 -8px; border-radius: 12px; transition: .15s; }
+    .upcoming-item:hover { background: var(--accent-wash); }
+    .upcoming-date { width: 44px; height: 46px; flex-basis: 44px; border-radius: 12px; }
+    .upcoming-date span { font-size: 9px; }
+    .upcoming-date strong { font-size: 17px; }
+    .upcoming-copy strong { font-size: 13px; }
+    .upcoming-copy span { font-size: 11px; }
+    .subtle-link { font-size: 12px; margin-top: 16px; }
+
+    /* Calendario */
+    .calendar-panel { padding: 26px; }
+    .calendar-month { font-size: 20px; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .calendar-grid { gap: 7px; }
+    .calendar-weekday { font-size: 11px; padding: 10px 0; letter-spacing: .08em; }
+    .calendar-day { min-height: 100px; padding: 10px; border-radius: 14px; border-color: var(--line); background: var(--surface); }
+    .calendar-day:hover { transform: translateY(-2px); box-shadow: var(--sh-2); border-color: var(--accent-light); }
+    .calendar-day.today { background: var(--accent-wash); }
+    .calendar-day.today .calendar-number { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-strong); color: var(--on-accent); }
+    .calendar-day.selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+    .calendar-number { font-size: 13px; }
+    .calendar-event { font-size: 10px; padding: 4px 7px; border-radius: 6px; border-left: 3px solid var(--accent-strong); }
+    .calendar-more { font-size: 10px; }
+    .calendar-detail { padding: 22px; border-radius: 18px; margin-top: 22px; }
+    .calendar-detail h3 { font-size: 16px; text-transform: capitalize; }
+
+    /* Actividades */
+    .activity-toolbar { padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--sh-1); gap: 10px; margin-bottom: 18px; }
+    .search-field, .filter-select { height: 44px; font-size: 13px; border-radius: 12px; background: var(--surface-soft); }
+    .search-field { padding-left: 16px; }
+    .activity-list { padding: 8px 22px; }
+    .activity-item { grid-template-columns: 56px minmax(0,1fr) auto; gap: 16px; padding: 16px 8px; margin: 0 -8px; border-radius: 12px; transition: background .15s; }
+    .activity-item:hover { background: color-mix(in srgb, var(--accent-wash) 70%, transparent); }
+    .activity-date { padding: 10px 4px; border-radius: 14px; }
+    .activity-date span { font-size: 10px; }
+    .activity-date strong { font-size: 20px; }
+    .activity-title { font-size: 15px; }
+    .activity-meta { font-size: 12px; gap: 12px; margin-top: 6px; }
+    .activity-actions .icon-button { width: 36px; height: 36px; box-shadow: none; }
+
+    /* Mi impacto */
+    .overview-hero { padding: 36px; border-radius: 24px; background: linear-gradient(125deg, var(--hero), color-mix(in srgb, var(--hero) 62%, var(--accent))); box-shadow: var(--sh-3); position: relative; overflow: hidden; }
+    .overview-hero::after { content: ""; position: absolute; width: 300px; height: 300px; right: -80px; top: -120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 68%); }
+    .overview-hero h2 { font-size: 36px; }
+    .overview-hero p { font-size: 15px; margin-top: 10px; }
+    .overview-stats { gap: 16px; margin: 20px 0; }
+    .overview-stat { padding: 22px; border-radius: var(--r-lg); box-shadow: var(--sh-1); border-top: 3px solid var(--accent); transition: .2s; }
+    .overview-stat:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+    .overview-stat span { font-size: 11px; }
+    .overview-stat strong { font-size: 32px; margin-top: 10px; }
+    .overview-grid { gap: 20px; }
+    .overview-panel { padding: 26px; }
+    .overview-panel h3 { font-size: 16px; }
+    .category-bars { gap: 16px; }
+    .category-row { grid-template-columns: 150px minmax(0,1fr) 32px; font-size: 13px; gap: 14px; }
+    .category-track { height: 10px; }
+    .category-fill { background: linear-gradient(90deg, var(--accent), var(--accent-strong)); }
+    .reflection-card { padding: 26px; border-radius: var(--r-lg); box-shadow: var(--sh-1); }
+    .reflection-icon { width: 44px; height: 44px; font-size: 18px; }
+    .reflection-card h3 { font-size: 21px; }
+    .reflection-card p { font-size: 13px; line-height: 1.6; }
+    .reflection-card textarea { font-size: 13px; min-height: 120px; border-radius: 13px; padding: 14px; }
+
+    /* Ventanas modales */
+    .modal-backdrop { background: rgba(20,24,34,.55); backdrop-filter: blur(8px); }
+    .modal { border-radius: 24px; padding: 30px; box-shadow: var(--sh-3); width: min(100%, 560px); }
+    .modal-header h2 { font-size: 27px; }
+    .modal-header p { font-size: 13px; }
+    .form-grid { gap: 16px; }
+    .form-field label, .category-field legend { font-size: 12px; margin-bottom: 8px; }
+    .form-field input:not([type="radio"]), .form-field select, .form-field textarea { min-height: 46px; font-size: 14px; border-radius: 12px; padding: 11px 13px; background: var(--surface-soft); transition: .15s; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); background: var(--surface); }
+    .category-option-content { min-height: 46px; border-radius: 12px; font-size: 13px; border: 1px solid var(--line); }
+    .category-radio-input:checked + .category-option-content { border-color: var(--accent); }
+    .modal-actions { margin-top: 24px; padding-top: 20px; }
+    .palette-choice { min-height: 78px; font-size: 12px; border-radius: 14px; }
+    .palette-swatch { width: 28px; height: 28px; }
+    .density-choice { min-height: 42px; font-size: 13px; }
+    .customization-label { font-size: 14px; }
+
+    /* Login */
+    .auth-backdrop { background: radial-gradient(900px 500px at 50% 0, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%), rgba(18,22,32,.82); }
+    .auth-card { max-width: 460px; padding: 40px 36px 32px; border-radius: 26px; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+    .auth-logo-badge { width: 70px; height: 70px; border-radius: 20px; background: linear-gradient(145deg, var(--accent), var(--accent-strong)); box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-strong) 38%, transparent); }
+    .auth-title { font-size: 32px; }
+    .auth-subtitle { font-size: 13px; }
+    .auth-tab-btn { font-size: 13px; padding: 11px 12px; }
+    .auth-field label { font-size: 12px; }
+    .auth-input { height: 48px; font-size: 14px; }
+    .auth-submit-btn { height: 50px; font-size: 14px; border-radius: 14px; color: var(--on-accent); background: linear-gradient(145deg, var(--accent), var(--accent-strong)); }
+    .auth-demo-label { font-size: 11px; }
+    .auth-demo-pill { font-size: 13px; padding: 11px; }
+    .auth-error-banner { font-size: 13px; }
+
+    /* Toasts */
+    .toast { font-size: 13px; padding: 14px 18px; border-radius: 14px; box-shadow: var(--sh-3); }
+
+    /* Tablet */
+    @media (min-width: 761px) and (max-width: 1100px) {
+      .app-shell { grid-template-columns: 224px minmax(0,1fr); }
+      .topbar { flex-wrap: wrap; }
+      .top-actions { max-width: 100%; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+      .nav-link { font-size: 13px; padding: 0 10px; }
+      .nav-link.active::after { display: none; }
+      .planner-columns { grid-template-columns: 1fr; }
+      .aside-column { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .side-panel + .side-panel { margin-top: 0; }
+      .calendar-day { min-height: 84px; }
+    }
+
+    /* Movil: navegacion inferior */
+    @media (max-width: 760px) {
+      .app-shell { display: block; }
+      .sidebar { position: fixed; inset: auto 0 0 0; top: auto; width: 100%; height: auto; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); border: 0; border-top: 1px solid var(--line); box-shadow: 0 -8px 24px rgba(30,25,35,.08); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(16px); z-index: 12; }
+      .brand, .nav-label, .weekly-focus, .sidebar-foot, .sidebar-spacer { display: none; }
+      .side-nav { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; overflow: visible; }
+      .nav-link { flex-direction: column; justify-content: center; gap: 3px; min-height: 56px; padding: 6px 2px; font-size: 11px; border-radius: 12px; text-align: center; }
+      .nav-link i { width: 30px; height: 26px; font-size: 15px; border-radius: 10px; background: transparent; }
+      .nav-link.active i { height: 26px; }
+      .nav-link.active::after { display: none; }
+      .main-shell { padding: 0 16px 104px; }
+      .topbar { margin: 0 -16px 22px; padding: 10px 16px; flex-wrap: wrap; }
+      .top-actions { width: 100%; max-width: 100%; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+      .planner-columns { grid-template-columns: 1fr; }
+      .aside-column { display: grid; grid-template-columns: 1fr; gap: 16px; }
+      .side-panel + .side-panel { margin-top: 0; }
+      .hero-panel { grid-template-columns: 1fr; border-radius: 22px; min-height: 0; }
+      .hero-summary { justify-self: stretch; }
+      .metrics { gap: 10px; }
+      .metric-card { padding: 14px; min-height: 92px; }
+      .metric-value { font-size: 24px; }
+      .week-strip { grid-template-columns: repeat(7, minmax(64px, 1fr)); overflow-x: auto; gap: 8px; padding-bottom: 8px; }
+      .day-card { min-height: 100px; }
+      .day-number { font-size: 24px; }
+      .agenda-panel, .calendar-panel, .overview-panel { padding: 18px; }
+      .task-row { grid-template-columns: 56px 12px minmax(0,1fr); }
+      .task-actions { grid-column: 3; justify-content: flex-end; }
+      .overview-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .overview-grid { grid-template-columns: 1fr; }
+      .toast-container { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+    }
+    @media (max-width: 520px) {
+      .hero-copy h2 { font-size: 32px; }
+      .hero-copy p { font-size: 14px; }
+      .calendar-day { min-height: 66px; padding: 6px 4px; border-radius: 10px; }
+      .calendar-event { font-size: 9px; padding: 2px 4px; }
+      .calendar-grid { gap: 3px; }
+      .category-row { grid-template-columns: 100px minmax(0,1fr) 26px; font-size: 12px; }
+      .modal { padding: 20px; border-radius: 20px; }
+      .activity-item { grid-template-columns: 46px minmax(0,1fr) auto; gap: 10px; }
+      .auth-card { padding: 30px 22px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><img class="gemini-brand-image" src="public/snapduty-tree.svg" alt=""></div>
+        <div><div class="brand-name">SnapDuty</div><div class="brand-note">SERVICIO SOCIAL CON PROPÓSITO</div></div>
+      </div>
+      <p class="nav-label">Tu espacio</p>
+      <nav class="side-nav">
+        <button class="nav-link active" data-view="week" type="button"><i class="fa-regular fa-calendar"></i> Mi semana</button>
+        <button class="nav-link" data-view="calendar" type="button"><i class="fa-regular fa-calendar-days"></i> Calendario</button>
+        <button class="nav-link" data-view="activities" type="button"><i class="fa-solid fa-list-check"></i> Actividades</button>
+        <button class="nav-link" data-view="overview" type="button"><i class="fa-solid fa-chart-simple"></i> Mi impacto</button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="weekly-focus">
+        <div class="focus-top"><span>Ritmo de la semana</span><i class="fa-solid fa-sparkles"></i></div>
+        <div class="focus-value"><span id="sidebarHours">0.0</span> <span>/ <span id="sidebarGoal">20</span> h</span></div>
+        <div class="focus-caption" id="sidebarCaption">Cada paso suma.</div>
+        <div class="focus-track"><span id="sidebarProgress"></span></div>
+      </div>
+      <div class="sidebar-foot">Una agenda con intención<br>también deja huella.</div>
+    </aside>
+
+    <main class="main-shell">
+      <header class="topbar">
+        <div class="breadcrumb">Tu espacio <span aria-hidden="true">/</span> <strong id="breadcrumbName">Mi semana</strong></div>
+        <div class="top-actions">
+          <div class="db-status-badge" id="dbStatusBadge" title="Estado de conexión con MongoDB">
+            <span class="db-indicator-dot"></span>
+            <span id="dbStatusText">Conectando...</span>
+          </div>
+          <button class="icon-button" id="customizeButton" type="button" aria-label="Personalizar interfaz" title="Personalizar interfaz"><i class="fa-solid fa-sliders"></i></button>
+          <button class="icon-button" id="themeToggle" type="button" aria-label="Activar tema oscuro" title="Cambiar tema"><i class="fa-regular fa-moon"></i></button>
+          <button class="secondary-button export-button" id="exportButton" type="button"><i class="fa-solid fa-arrow-up-from-bracket"></i> Exportar</button>
+          <button class="primary-button" id="newActivityButton" type="button" aria-label="Nueva actividad"><i class="fa-solid fa-plus"></i><span>Nueva actividad</span></button>
+          
+          <div class="user-profile-wrap" id="userProfileWrap">
+            <button class="user-profile-btn" id="userProfileBtn" type="button" aria-label="Menú de usuario" aria-expanded="false">
+              <span class="user-avatar-badge" id="userAvatarBadge">--</span>
+              <span id="userProfileName">Cargando...</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:9px;color:var(--text-soft)"></i>
+            </button>
+            <div class="user-profile-dropdown" id="userProfileDropdown" role="menu">
+              <div class="user-dropdown-info">
+                <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
+                <div class="user-dropdown-email" id="userDropdownEmail">usuario@correo.com</div>
+                <div class="user-dropdown-inst" id="userDropdownInst">Universidad</div>
+              </div>
+              <button class="user-dropdown-action" id="dropdownSwitchUserBtn" type="button">
+                <i class="fa-solid fa-users"></i> Cambiar de cuenta
+              </button>
+              <button class="user-dropdown-action danger" id="dropdownLogoutBtn" type="button">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="view active" id="view-week" aria-labelledby="weekTitle">
+          <div class="week-toolbar">
+            <div class="week-heading">
+              <div>
+                <h1 id="weekTitle">Una semana con intención.</h1>
+                <p>Organiza tus próximos pasos, a tu ritmo.</p>
+              </div>
+            </div>
+            <div class="week-controls" aria-label="Cambiar semana">
+              <button class="icon-button" id="prevWeek" type="button" aria-label="Semana anterior"><i class="fa-solid fa-chevron-left"></i></button>
+              <span class="week-range" id="weekRange"></span>
+              <button class="secondary-button" id="thisWeek" type="button">Esta semana</button>
+              <button class="icon-button" id="nextWeek" type="button" aria-label="Semana siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+
+          <section class="hero-panel" aria-label="Resumen semanal">
+            <div class="hero-copy">
+              <span class="eyebrow"><i class="fa-solid fa-circle"></i> Cada hora de servicio, un cambio que cuenta.</span>
+              <h2>Tu servicio social.<br><em>Tu huella en el mundo.</em></h2>
+              <p>Planea tus actividades de servicio social y haz que cada día tenga un propósito. Lo importante no es ir rápido, es seguir avanzando.</p>
+            </div>
+            <div class="hero-summary">
+              <div class="hero-summary-label">Horas completadas esta semana</div>
+              <div class="hero-summary-value"><span id="weekDoneHours">0.0</span> <span>hrs</span></div>
+              <div class="hero-summary-note" id="weekRemaining">Tu semana empieza cuando tú quieras.</div>
+            </div>
+          </section>
+
+          <section class="metrics" aria-label="Resumen de actividades">
+            <article class="metric-card"><div><div class="metric-label">En agenda</div><div class="metric-value" id="weekPlannedCount">0</div></div><div class="metric-icon"><i class="fa-regular fa-calendar-check"></i></div></article>
+            <article class="metric-card"><div><div class="metric-label">Completadas</div><div class="metric-value" id="weekCompletedCount">0</div></div><div class="metric-icon"><i class="fa-solid fa-check"></i></div></article>
+            <article class="metric-card"><div><div class="metric-label">Horas planeadas</div><div class="metric-value"><span id="weekPlannedHours">0.0</span><small style="font-size:10px;font-weight:600;color:var(--text-soft)"> h</small></div></div><div class="metric-icon"><i class="fa-regular fa-clock"></i></div></article>
+          </section>
+
+          <div class="section-heading">
+            <div><h2>Tu semana</h2><p>Elige un día para revisar o planear tus actividades.</p></div>
+          </div>
+          <div class="week-strip" id="weekStrip" aria-label="Días de la semana"></div>
+
+          <div class="planner-columns" style="margin-top:18px">
+            <section class="panel agenda-panel" aria-labelledby="agendaTitle">
+              <div class="agenda-head">
+                <div><div class="agenda-date" id="agendaTitle">Agenda del día</div><div class="agenda-subtitle" id="agendaSubtitle"></div></div>
+                <button class="secondary-button" id="addForDay" type="button"><i class="fa-solid fa-plus"></i> Agregar</button>
+              </div>
+              <section class="service-card" id="dailyServicePanel" aria-labelledby="serviceTitle"></section>
+              <div class="agenda-list" id="dayAgenda"></div>
+            </section>
+            <aside class="aside-column">
+              <section class="panel side-panel">
+                <div class="side-panel-head"><h3>Horas por día</h3><i class="fa-solid fa-chart-column" style="color:var(--accent)"></i></div>
+                <p class="side-panel-copy">Horas de servicio completadas por día.</p>
+                <div class="week-bars" id="weekBars"></div>
+                <div class="goal-row"><strong>Meta semanal</strong><span><strong>20 h · lun a vie</strong></span></div>
+              </section>
+              <section class="panel side-panel">
+                <div class="side-panel-head"><h3>Lo que sigue</h3><i class="fa-regular fa-compass" style="color:var(--accent)"></i></div>
+                <div class="upcoming-list" id="upcomingList"></div>
+                <button class="subtle-link" type="button" data-go-view="activities">Ver todas las actividades <i class="fa-solid fa-arrow-right"></i></button>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-calendar" aria-labelledby="calendarTitle">
+          <div class="page-heading">
+            <div><h1 id="calendarTitle">Tu calendario.</h1><p>Una mirada amplia a todo lo que tienes por delante.</p></div>
+            <button class="secondary-button" id="calendarToday" type="button"><i class="fa-regular fa-calendar"></i> Hoy</button>
+          </div>
+          <section class="panel calendar-panel">
+            <div class="calendar-toolbar">
+              <div class="calendar-month" id="calendarMonth"></div>
+              <div class="calendar-controls">
+                <button class="icon-button" id="prevMonth" type="button" aria-label="Mes anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="icon-button" id="nextMonth" type="button" aria-label="Mes siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-detail">
+              <div class="agenda-head">
+                <div><h3 id="calendarDayTitle">Actividades del día</h3><div class="agenda-subtitle" id="calendarDaySubtitle"></div></div>
+                <button class="text-button" id="addCalendarDay" type="button"><i class="fa-solid fa-plus"></i> Agregar</button>
+              </div>
+              <div class="agenda-list" id="calendarDayAgenda"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-activities" aria-labelledby="activitiesTitle">
+          <div class="page-heading">
+            <div><h1 id="activitiesTitle">Tus actividades.</h1><p>Todo lo que estás planeando y todo lo que ya lograste.</p></div>
+            <button class="secondary-button" id="exportCsvButton" type="button"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
+          </div>
+          <div class="activity-toolbar">
+            <label class="sr-only" for="activitySearch">Buscar actividades</label>
+            <input class="search-field" id="activitySearch" type="search" placeholder="Buscar una actividad...">
+            <label class="sr-only" for="activityStatusFilter">Filtrar por estado</label>
+            <select class="filter-select" id="activityStatusFilter">
+              <option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="done">Completadas</option>
+            </select>
+            <label class="sr-only" for="activityCategoryFilter">Filtrar por categoría</label>
+            <select class="filter-select" id="activityCategoryFilter">
+              <option value="all">Todas las categorías</option>
+              <option>Atención comunitaria</option><option>Educación</option><option>Gestión</option><option>Investigación</option><option>Otro</option>
+            </select>
+          </div>
+          <section class="panel activity-list" id="activityList"></section>
+        </section>
+
+        <section class="view" id="view-overview" aria-labelledby="overviewTitle">
+          <div class="page-heading">
+            <div><h1 id="overviewTitle">Tu impacto, a tu manera.</h1><p>Un resumen de cada paso que has dado.</p></div>
+          </div>
+          <section class="overview-hero">
+            <h2 id="overviewGreeting">Cada aporte cuenta.</h2>
+            <p id="overviewCaption">Tu camino de servicio social se construye actividad por actividad.</p>
+          </section>
+          <div class="overview-stats">
+            <article class="overview-stat"><span>Actividades planeadas</span><strong id="allActivityCount">0</strong></article>
+            <article class="overview-stat"><span>Actividades completadas</span><strong id="allDoneCount">0</strong></article>
+            <article class="overview-stat"><span>Horas de impacto</span><strong id="allDoneHours">0.0 h</strong></article>
+            <article class="overview-stat"><span>Días en movimiento</span><strong id="activeDaysCount">0</strong></article>
+          </div>
+          <div class="overview-grid">
+            <section class="panel overview-panel">
+              <h3>¿Dónde estás aportando?</h3>
+              <p class="side-panel-copy">Actividades organizadas por área de servicio.</p>
+              <div class="category-bars" id="categoryBars"></div>
+            </section>
+            <section class="reflection-card">
+              <div class="reflection-icon"><i class="fa-regular fa-lightbulb"></i></div>
+              <h3>Un momento para mirar atrás</h3>
+              <p>Guarda una reflexión sobre algo que aprendiste o una persona a la que ayudaste. Esta nota se queda en este navegador.</p>
+              <label class="sr-only" for="reflectionNote">Reflexión personal</label>
+              <textarea id="reflectionNote" maxlength="1000" placeholder="Esta semana aprendí que..."></textarea>
+            </section>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="activityModal" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div><h2 id="modalTitle">Nueva actividad</h2><p>Planea tu próximo paso de servicio social.</p></div>
+        <button class="icon-button" id="closeModal" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="activityForm">
+        <input type="hidden" id="activityId">
+        <div class="form-grid">
+          <div class="form-field wide"><label for="activityTitle">¿Qué vas a hacer?</label><input id="activityTitle" name="title" maxlength="120" required placeholder="Ej. Preparar material para el taller"></div>
+          <div class="form-field"><label for="activityDate">Día</label><input id="activityDate" name="date" type="date" required></div>
+          <fieldset class="form-field wide category-field">
+            <legend>Área</legend>
+            <div class="category-radio-list">
+              <label class="category-option"><input class="category-radio-input" type="radio" name="category" value="Atención comunitaria" required><span class="category-option-content"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i><span>Atención comunitaria</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></span></label>
+              <label class="category-option"><input class="category-radio-input" type="radio" name="category" value="Educación" required><span class="category-option-content"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Educación</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></span></label>
+              <label class="category-option"><input class="category-radio-input" type="radio" name="category" value="Gestión" required><span class="category-option-content"><i class="fa-solid fa-folder-open" aria-hidden="true"></i><span>Gestión</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></span></label>
+              <label class="category-option"><input class="category-radio-input" type="radio" name="category" value="Investigación" required><span class="category-option-content"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Investigación</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></span></label>
+              <label class="category-option"><input class="category-radio-input" type="radio" name="category" value="Otro" required><span class="category-option-content"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i><span>Otro</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></span></label>
+            </div>
+          </fieldset>
+          <div class="form-field"><label for="activityStart">Hora de inicio (opcional)</label><input id="activityStart" name="start" type="time"></div>
+          <div class="form-field"><label for="activityEnd">Hora de término (opcional)</label><input id="activityEnd" name="end" type="time"></div>
+          <div class="form-field"><label for="activityPriority">Prioridad</label><select id="activityPriority" name="priority" required><option value="" selected disabled>Selecciona una prioridad</option><option value="medium">Normal</option><option value="high">Importante</option><option value="low">Cuando pueda</option></select></div>
+          <div class="form-field"><label for="activityDone">Estado</label><select id="activityDone" name="done" required><option value="" selected disabled>Selecciona un estado</option><option value="false">Planeada</option><option value="true">Completada</option></select></div>
+          <div class="form-field wide"><label for="activityNotes">Notas (opcional)</label><textarea id="activityNotes" name="notes" maxlength="500" placeholder="Detalles, materiales o personas de contacto..."></textarea></div>
+        </div>
+        <div class="modal-actions">
+          <button class="text-button hidden" id="deleteFromModal" type="button"><i class="fa-regular fa-trash-can"></i> Eliminar</button>
+          <div class="modal-actions-right">
+            <button class="secondary-button" id="cancelModal" type="button">Cancelar</button>
+            <button class="primary-button" type="submit"><i class="fa-solid fa-check"></i> Guardar actividad</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="customizationBackdrop" role="presentation">
+    <section class="modal customization-modal" role="dialog" aria-modal="true" aria-labelledby="customizationTitle">
+      <div class="modal-header">
+        <div><h2 id="customizationTitle">Personalizar interfaz</h2><p>Ajusta SnapDuty a tu manera.</p></div>
+        <button class="icon-button" id="closeCustomization" type="button" aria-label="Cerrar personalización"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="customization-groups">
+        <fieldset class="customization-group">
+          <legend class="customization-label">Color de acento</legend>
+          <div class="palette-options" role="group" aria-label="Elegir color de acento">
+            <button class="palette-choice" type="button" data-palette="rose" aria-pressed="true"><span class="palette-swatch" style="--swatch:#bd7189"></span><span>Rosa</span></button>
+            <button class="palette-choice" type="button" data-palette="sage" aria-pressed="false"><span class="palette-swatch" style="--swatch:#6e9178"></span><span>Salvia</span></button>
+            <button class="palette-choice" type="button" data-palette="ocean" aria-pressed="false"><span class="palette-swatch" style="--swatch:#6f88a9"></span><span>Océano</span></button>
+            <button class="palette-choice" type="button" data-palette="plum" aria-pressed="false"><span class="palette-swatch" style="--swatch:#927993"></span><span>Malva</span></button>
+          </div>
+        </fieldset>
+        <section class="customization-group" aria-labelledby="densityLabel">
+          <h3 class="customization-label" id="densityLabel">Espaciado</h3>
+          <div class="density-options" role="group" aria-label="Densidad de la interfaz">
+            <button class="density-choice" type="button" data-density="comfortable" aria-pressed="true">Cómodo</button>
+            <button class="density-choice" type="button" data-density="compact" aria-pressed="false">Compacto</button>
+          </div>
+        </section>
+        <section class="customization-group motion-setting" aria-labelledby="motionLabel">
+          <h3 class="customization-label" id="motionLabel">Reducir movimiento</h3>
+          <button class="motion-switch" id="motionSwitch" type="button" role="switch" aria-checked="false" aria-label="Reducir movimiento"><span></span></button>
+        </section>
+      </div>
+    </section>
+  </div>
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ==================== AUTHENTICATION MODAL ==================== -->
+  <div class="auth-backdrop" id="authBackdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo-badge">
+          <img class="gemini-brand-image" src="public/snapduty-tree.svg" alt="">
+        </div>
+        <h2 class="auth-title" id="authTitle">SnapDuty</h2>
+        <p class="auth-subtitle">Servicio Social con Propósito · Tu sesión en MongoDB</p>
+      </div>
+
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab-btn active" id="tabLoginBtn" type="button" role="tab" aria-selected="true">Iniciar Sesión</button>
+        <button class="auth-tab-btn" id="tabRegisterBtn" type="button" role="tab" aria-selected="false">Crear Cuenta</button>
+      </div>
+
+      <div class="auth-error-banner" id="authErrorBanner">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="authErrorMsg">Error al iniciar sesión</span>
+      </div>
+
+      <!-- Formulario Login -->
+      <form id="loginForm">
+        <div class="auth-form-group">
+          <div class="auth-field">
+            <label for="loginEmail">Correo electrónico</label>
+            <div class="auth-input-wrap">
+              <i class="fa-regular fa-envelope field-icon"></i>
+              <input class="auth-input" id="loginEmail" type="email" placeholder="carlos.demo@snapduty.com" required autocomplete="email">
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="loginPassword">Contraseña</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock field-icon"></i>
+              <input class="auth-input" id="loginPassword" type="password" placeholder="Tu contraseña" required autocomplete="current-password">
+              <button class="auth-toggle-pass" id="toggleLoginPass" type="button" aria-label="Mostrar u ocultar contraseña">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button class="auth-submit-btn" id="loginSubmitBtn" type="submit">
+            <i class="fa-solid fa-right-to-bracket"></i> Entrar a mi espacio
+          </button>
+        </div>
+      </form>
+
+      <!-- Formulario Registro -->
+      <form id="registerForm" class="hidden">
+        <div class="auth-form-group">
+          <div class="auth-field">
+            <label for="regName">Nombre completo</label>
+            <div class="auth-input-wrap">
+              <i class="fa-regular fa-user field-icon"></i>
+              <input class="auth-input" id="regName" type="text" placeholder="Ej. Ana Morales" required>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="regInstitution">Institución / Universidad</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-building-columns field-icon"></i>
+              <input class="auth-input" id="regInstitution" type="text" placeholder="Ej. Universidad Autónoma" required>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="regEmail">Correo electrónico</label>
+            <div class="auth-input-wrap">
+              <i class="fa-regular fa-envelope field-icon"></i>
+              <input class="auth-input" id="regEmail" type="email" placeholder="correo@ejemplo.com" required autocomplete="email">
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="regPassword">Contraseña (mínimo 6 caracteres)</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock field-icon"></i>
+              <input class="auth-input" id="regPassword" type="password" placeholder="Crea una contraseña segura" minlength="6" required autocomplete="new-password">
+              <button class="auth-toggle-pass" id="toggleRegPass" type="button" aria-label="Mostrar u ocultar contraseña">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <button class="auth-submit-btn" id="regSubmitBtn" type="submit">
+            <i class="fa-solid fa-user-plus"></i> Registrarse e iniciar
+          </button>
+        </div>
+      </form>
+
+      <!-- Accesos Rápidos Demo -->
+      <div class="auth-demo-section">
+        <div class="auth-demo-label">⚡ Acceso rápido con sesiones de prueba:</div>
+        <div class="auth-demo-pills">
+          <button class="auth-demo-pill" id="demoCarlosBtn" type="button" title="Iniciar como Carlos Mendoza">
+            <i class="fa-solid fa-user-graduate"></i> Carlos M.
+          </button>
+          <button class="auth-demo-pill" id="demoSofiaBtn" type="button" title="Iniciar como Sofía García">
+            <i class="fa-solid fa-user-tie"></i> Sofía G.
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const LOCAL_PREVIEW = true;
+      const TASKS_KEY = "marea_planner_activities_v1";
+      const THEME_KEY = "servicio_social_theme";
+      const SERVICE_TIMERS_KEY = "marea_daily_service_timers_v1";
+      const REFLECTION_KEY = "marea_planner_reflection_v1";
+      const TOKEN_KEY = "snapduty_auth_token_v1";
+      const USER_KEY = "snapduty_auth_user_v1";
+      const INTERFACE_KEY = "snapduty_interface_preferences_v1";
+      const INTERFACE_PALETTES = {
+        rose: {
+          light: { accent: "#c27a91", strong: "#a95f78", light: "#e7c7d1", wash: "#fbf0f3", hero: "#70515d", heroSurface: "#80616d", heroAccent: "#f0d7df", heroMuted: "#e7d9de" },
+          dark: { accent: "#899bb7", strong: "#a9b8ce", light: "#566984", wash: "#28364a", hero: "#202c3c", heroSurface: "#2b394c", heroAccent: "#c2cede", heroMuted: "#c0cad8" }
+        },
+        sage: {
+          light: { accent: "#779681", strong: "#5b7d65", light: "#cadbce", wash: "#eff5f0", hero: "#4b6654", heroSurface: "#597560", heroAccent: "#c9dfcc", heroMuted: "#dbe8dd" },
+          dark: { accent: "#94aaa0", strong: "#b5c5bd", light: "#50665d", wash: "#303e39", hero: "#202c3c", heroSurface: "#2b394c", heroAccent: "#c5d0dc", heroMuted: "#c0cad8" }
+        },
+        ocean: {
+          light: { accent: "#7189a8", strong: "#566f90", light: "#c8d5e5", wash: "#f0f4f9", hero: "#405a78", heroSurface: "#506b8b", heroAccent: "#c5d5e7", heroMuted: "#d7e1ed" },
+          dark: { accent: "#8ca3c4", strong: "#afc0d8", light: "#536d91", wash: "#303f55", hero: "#202c3c", heroSurface: "#2b394c", heroAccent: "#c2cede", heroMuted: "#c0cad8" }
+        },
+        plum: {
+          light: { accent: "#927993", strong: "#755c7f", light: "#d9c9dc", wash: "#f5eff7", hero: "#655568", heroSurface: "#76657a", heroAccent: "#e3d4e6", heroMuted: "#e2d9e5" },
+          dark: { accent: "#a99bb6", strong: "#c2b5ce", light: "#655873", wash: "#3a3445", hero: "#202c3c", heroSurface: "#2b394c", heroAccent: "#c8c0d4", heroMuted: "#c0cad8" }
+        }
+      };
+      let currentUser = null;
+      let DAILY_HOURS_GOAL = 4;
+      let WEEKLY_HOURS_GOAL = 20;
+      let TOTAL_HOURS_GOAL = 480;
+
+      const CATEGORIES = ["Atención comunitaria", "Educación", "Gestión", "Investigación", "Otro"];
+      const $ = (id) => document.getElementById(id);
+      const dateAtNoon = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+      const dateKey = (date) => {
+        const d = dateAtNoon(date);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      };
+      const parseDate = (value) => {
+        const [year, month, day] = value.split("-").map(Number);
+        return new Date(year, month - 1, day, 12);
+      };
+      const today = dateAtNoon(new Date());
+      let tasks = loadTasks();
+      let serviceTimers = loadServiceTimers();
+      let selectedDate = dateKey(today);
+      let weekOffset = 0;
+      let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1, 12);
+      let currentView = "week";
+      let timerInterval = null;
+      const API_BASE = LOCAL_PREVIEW ? "" : (window.location.origin.startsWith("http") ? "" : "http://localhost:3000");
+      let isMongoConnected = false;
+      let interfacePreferences = loadInterfacePreferences();
+
+      function getAuthToken() {
+        return localStorage.getItem(TOKEN_KEY) || "";
+      }
+
+      function getCurrentUser() {
+        try {
+          const raw = localStorage.getItem(USER_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function setAuthSession(token, user) {
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        currentUser = user;
+        updateUserUI(user);
+        interfacePreferences = loadInterfacePreferences();
+        applyInterfacePreferences();
+      }
+
+      function clearAuthSession() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        currentUser = null;
+        tasks = [];
+        serviceTimers = {};
+        localStorage.removeItem(TASKS_KEY);
+        localStorage.removeItem(SERVICE_TIMERS_KEY);
+        updateUserUI(null);
+        interfacePreferences = loadInterfacePreferences();
+        applyInterfacePreferences();
+        renderAll();
+        openAuthModal("Has cerrado sesión. Ingresa con tu cuenta para continuar.");
+      }
+
+      function updateUserUI(user) {
+        if (!user) {
+          if ($("userAvatarBadge")) $("userAvatarBadge").textContent = "--";
+          if ($("userProfileName")) $("userProfileName").textContent = "Iniciar sesión";
+          if ($("userDropdownName")) $("userDropdownName").textContent = "Invitado";
+          if ($("userDropdownEmail")) $("userDropdownEmail").textContent = "Sin sesión activa";
+          if ($("userDropdownInst")) $("userDropdownInst").textContent = "Haz clic para ingresar";
+          return;
+        }
+        const initials = user.name
+          .split(" ")
+          .filter(Boolean)
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase() || "SS";
+        const firstName = user.name.split(" ")[0];
+
+        if ($("userAvatarBadge")) $("userAvatarBadge").textContent = initials;
+        if ($("userProfileName")) $("userProfileName").textContent = firstName;
+        if ($("userDropdownName")) $("userDropdownName").textContent = user.name;
+        if ($("userDropdownEmail")) $("userDropdownEmail").textContent = user.email;
+        if ($("userDropdownInst")) $("userDropdownInst").textContent = user.institution || user.programName || "Universidad";
+
+        if (user.weeklyHours) WEEKLY_HOURS_GOAL = Number(user.weeklyHours);
+        if (user.dailyHours) DAILY_HOURS_GOAL = Number(user.dailyHours);
+        if (user.totalHours) TOTAL_HOURS_GOAL = Number(user.totalHours);
+        if ($("sidebarGoal")) $("sidebarGoal").textContent = WEEKLY_HOURS_GOAL;
+      }
+
+      async function apiFetch(endpoint, options = {}) {
+        if (LOCAL_PREVIEW) {
+          return new Response(JSON.stringify({ success: true, data: {} }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        const token = getAuthToken();
+        const headers = {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        try {
+          const res = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers
+          });
+
+          if (res.status === 401 && !endpoint.includes("/auth/")) {
+            clearAuthSession();
+            openAuthModal("Tu sesión ha expirado. Por favor ingresa de nuevo.");
+          }
+          return res;
+        } catch (err) {
+          console.warn(`Error en llamada API ${endpoint}:`, err);
+          throw err;
+        }
+      }
+
+      function openAuthModal(msg = "") {
+        const banner = $("authErrorBanner");
+        if (msg) {
+          $("authErrorMsg").textContent = msg;
+          banner.classList.add("active");
+        } else {
+          banner.classList.remove("active");
+        }
+        $("authBackdrop").classList.add("active");
+      }
+
+      function closeAuthModal() {
+        $("authBackdrop").classList.remove("active");
+      }
+
+      function showAuthError(msg) {
+        $("authErrorMsg").textContent = msg;
+        $("authErrorBanner").classList.add("active");
+      }
+
+      function updateDbBadge(connected, text) {
+        isMongoConnected = connected;
+        const badge = $("dbStatusBadge");
+        const statusText = $("dbStatusText");
+        if (badge) {
+          badge.classList.toggle("connected", connected);
+          badge.classList.toggle("offline", !connected);
+        }
+        if (statusText) statusText.textContent = text;
+      }
+
+      function loadTasks() {
+        try {
+          const raw = localStorage.getItem(TASKS_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error("El formato guardado no es una lista.");
+          return parsed.filter((task) =>
+            task && typeof task.id === "string" && typeof task.title === "string" &&
+            /^\d{4}-\d{2}-\d{2}$/.test(task.date) && CATEGORIES.includes(task.category)
+          );
+        } catch (error) {
+          console.error("No se pudieron leer las actividades guardadas:", error);
+          setTimeout(() => showToast("No se pudieron leer las actividades guardadas. Puedes empezar una agenda nueva.", "error"), 0);
+          return [];
+        }
+      }
+
+      function loadServiceTimers() {
+        try {
+          const raw = localStorage.getItem(SERVICE_TIMERS_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("El formato guardado no es válido.");
+          return Object.fromEntries(Object.entries(parsed).filter(([date, timer]) =>
+            /^\d{4}-\d{2}-\d{2}$/.test(date) && timer && Number.isFinite(Number(timer.startAt))
+          ));
+        } catch (error) {
+          console.error("No se pudo leer el cronómetro de servicio:", error);
+          setTimeout(() => showToast("No se pudo recuperar el cronómetro guardado.", "error"), 0);
+          return {};
+        }
+      }
+
+      function interfaceStorageKey() {
+        const user = currentUser || getCurrentUser();
+        const userId = user?.id || user?._id;
+        return `${INTERFACE_KEY}:${userId || "guest"}`;
+      }
+
+      function normalizeInterfacePreferences(value) {
+        const preferences = value && typeof value === "object" ? value : {};
+        return {
+          palette: Object.hasOwn(INTERFACE_PALETTES, preferences.palette) ? preferences.palette : "rose",
+          density: preferences.density === "compact" ? "compact" : "comfortable",
+          reduceMotion: preferences.reduceMotion === true
+        };
+      }
+
+      function loadInterfacePreferences() {
+        try {
+          const raw = localStorage.getItem(interfaceStorageKey());
+          return normalizeInterfacePreferences(raw ? JSON.parse(raw) : null);
+        } catch (error) {
+          console.warn("No se pudieron leer las preferencias de interfaz:", error);
+          return normalizeInterfacePreferences(null);
+        }
+      }
+
+      function applyInterfacePreferences() {
+        const root = document.documentElement;
+        const palette = INTERFACE_PALETTES[interfacePreferences.palette] || INTERFACE_PALETTES.rose;
+        const colors = root.classList.contains("dark") ? palette.dark : palette.light;
+        const properties = {
+          "--accent": colors.accent,
+          "--accent-strong": colors.strong,
+          "--accent-light": colors.light,
+          "--accent-wash": colors.wash,
+          "--hero": colors.hero,
+          "--hero-surface": colors.heroSurface,
+          "--hero-accent": colors.heroAccent,
+          "--hero-muted": colors.heroMuted,
+          "--focus-text": colors.heroMuted,
+          "--focus-progress": colors.light
+        };
+        Object.entries(properties).forEach(([name, value]) => root.style.setProperty(name, value));
+        root.classList.toggle("compact", interfacePreferences.density === "compact");
+        root.classList.toggle("reduce-motion", interfacePreferences.reduceMotion);
+        document.querySelectorAll("[data-palette]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.palette === interfacePreferences.palette));
+        });
+        document.querySelectorAll("[data-density]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.density === interfacePreferences.density));
+        });
+        $("motionSwitch")?.setAttribute("aria-checked", String(interfacePreferences.reduceMotion));
+      }
+
+      function saveInterfacePreferences() {
+        try {
+          localStorage.setItem(interfaceStorageKey(), JSON.stringify(interfacePreferences));
+        } catch (error) {
+          console.error("No se pudieron guardar las preferencias de interfaz:", error);
+          showToast("No se pudieron guardar tus preferencias en este navegador.", "error");
+        }
+        if (isMongoConnected) {
+          apiFetch("/api/settings/interface", {
+            method: "PUT",
+            body: JSON.stringify({ value: interfacePreferences })
+          }).catch((error) => console.warn("No se pudieron sincronizar las preferencias de interfaz:", error));
+        }
+      }
+
+      function persistTasks() {
+        try {
+          localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+          renderAll();
+          return true;
+        } catch (error) {
+          console.error("No se pudieron guardar las actividades:", error);
+          showToast("No se pudieron guardar los cambios en este navegador.", "error");
+          return false;
+        }
+      }
+
+      function persistServiceTimers() {
+        try {
+          localStorage.setItem(SERVICE_TIMERS_KEY, JSON.stringify(serviceTimers));
+          return true;
+        } catch (error) {
+          console.error("No se pudo guardar el cronómetro de servicio:", error);
+          showToast("No se pudo guardar el cronómetro en este navegador.", "error");
+          return false;
+        }
+      }
+
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        $("toastContainer").appendChild(toast);
+        window.setTimeout(() => toast.remove(), 3200);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[char]);
+      }
+
+      function weekStart(date) {
+        const start = dateAtNoon(date);
+        const offset = (start.getDay() + 6) % 7;
+        start.setDate(start.getDate() - offset);
+        return start;
+      }
+
+      function currentWeekStart() {
+        const start = weekStart(today);
+        start.setDate(start.getDate() + weekOffset * 7);
+        return start;
+      }
+
+      function weekTasks(start) {
+        const end = new Date(start);
+        end.setDate(end.getDate() + 7);
+        return tasks.filter((task) => {
+          const date = parseDate(task.date);
+          return date >= start && date < end;
+        });
+      }
+
+      function duration(task) {
+        if (!task.start || !task.end) return 0;
+        const [startHour, startMinute] = task.start.split(":").map(Number);
+        const [endHour, endMinute] = task.end.split(":").map(Number);
+        return Math.max(0, (endHour * 60 + endMinute - startHour * 60 - startMinute) / 60);
+      }
+
+      function timerForDate(date) { return serviceTimers[date] || null; }
+      function timerTargetHours(timer) {
+        const target = Number(timer?.targetHours);
+        return target >= 1 && target <= 12 ? target : DAILY_HOURS_GOAL;
+      }
+      function workedMilliseconds(timer, now = Date.now()) {
+        if (!timer) return 0;
+        const saved = Number.isFinite(Number(timer.elapsedMs))
+          ? Number(timer.elapsedMs)
+          : timer.endAt ? Number(timer.hoursWorked || 0) * 3600000 : 0;
+        const activeSince = timer.activeSince ?? (!timer.pausedAt && !timer.endAt ? timer.startAt : null);
+        return Math.max(0, saved + (activeSince ? Math.max(0, now - Number(activeSince)) : 0));
+      }
+      function serviceHours(date, now = Date.now()) {
+        const timer = timerForDate(date);
+        if (!timer) return 0;
+        return workedMilliseconds(timer, now) / 3600000;
+      }
+      function hoursInWeek(start, now = Date.now()) {
+        return Array.from({ length: 5 }, (_, index) => {
+          const date = new Date(start);
+          date.setDate(date.getDate() + index);
+          return serviceHours(dateKey(date), now);
+        }).reduce((sum, hours) => sum + hours, 0);
+      }
+      function isWeekday(date) { return date.getDay() >= 1 && date.getDay() <= 5; }
+      function formatLocalTime(date) {
+        return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+      }
+      function formatCountdown(seconds) {
+        const remaining = Math.max(0, Math.floor(seconds));
+        const hours = Math.floor(remaining / 3600);
+        const minutes = Math.floor((remaining % 3600) / 60);
+        const secs = remaining % 60;
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      }
+
+      function formatHours(hours) { return hours.toFixed(1); }
+      function formatDate(date, options = { day: "numeric", month: "long" }) {
+        return date.toLocaleDateString("es-MX", options);
+      }
+      function formatTime(task) { return task.start && task.end ? `${task.start} – ${task.end}` : task.start || "Sin horario"; }
+      function sortedForDate(date) {
+        return tasks.filter((task) => task.date === date).sort((a, b) => {
+          if (!a.start && !b.start) return a.title.localeCompare(b.title, "es");
+          if (!a.start) return 1;
+          if (!b.start) return -1;
+          return a.start.localeCompare(b.start);
+        });
+      }
+
+      function renderAll() {
+        renderWeek();
+        renderCalendar();
+        renderActivities();
+        renderOverview();
+        renderSidebar();
+      }
+
+      function renderSidebar() {
+        const start = currentWeekStart();
+        const hours = hoursInWeek(start);
+        const percent = Math.min(100, (hours / WEEKLY_HOURS_GOAL) * 100);
+        $("sidebarHours").textContent = formatHours(hours);
+        $("sidebarGoal").textContent = WEEKLY_HOURS_GOAL;
+        $("sidebarProgress").style.width = `${percent}%`;
+        $("sidebarCaption").textContent = hours >= WEEKLY_HOURS_GOAL ? "¡Meta semanal alcanzada!" : "4 horas por día, de lunes a viernes.";
+      }
+
+      function renderWeek() {
+        const start = currentWeekStart();
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        const monthSame = start.getMonth() === end.getMonth();
+        $("weekRange").textContent = monthSame
+          ? `${start.getDate()} – ${formatDate(end, { day: "numeric", month: "short" })}`
+          : `${formatDate(start, { day: "numeric", month: "short" })} – ${formatDate(end, { day: "numeric", month: "short" })}`;
+
+        const current = weekTasks(start);
+        const done = current.filter((task) => task.done);
+        const hoursDone = hoursInWeek(start);
+        const hoursPlanned = current.reduce((sum, task) => sum + duration(task), 0);
+        $("weekDoneHours").textContent = formatHours(hoursDone);
+        $("weekRemaining").textContent = hoursDone >= WEEKLY_HOURS_GOAL
+          ? "¡Llegaste a tu meta de esta semana!"
+          : `Te ${hoursDone > 0 ? `faltan ${formatHours(WEEKLY_HOURS_GOAL - hoursDone)} horas` : "esperan"} para completar 20 horas.`;
+        $("weekPlannedCount").textContent = current.length;
+        $("weekCompletedCount").textContent = done.length;
+        $("weekPlannedHours").textContent = formatHours(hoursPlanned);
+
+        const dayNames = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+        $("weekStrip").innerHTML = Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(start);
+          date.setDate(date.getDate() + index);
+          const key = dateKey(date);
+          const dayTasks = sortedForDate(key);
+          const dots = dayTasks.slice(0, 4).map((task) => `<span class="${task.done ? "done" : ""}"></span>`).join("");
+          return `<button type="button" class="day-card ${key === selectedDate ? "selected" : ""} ${key === dateKey(today) ? "today" : ""}" data-select-date="${key}" aria-pressed="${key === selectedDate}">
+            <span><span class="day-name">${dayNames[index]}</span><span class="day-number">${date.getDate()}</span></span>
+            <span class="day-count"><strong>${dayTasks.length}</strong> ${dayTasks.length === 1 ? "actividad" : "actividades"}</span>
+            <span class="day-dots" aria-hidden="true">${dots}</span>
+          </button>`;
+        }).join("");
+
+        const selected = parseDate(selectedDate);
+        const selectedTasks = sortedForDate(selectedDate);
+        $("agendaTitle").textContent = formatDate(selected, { weekday: "long", day: "numeric", month: "long" });
+        $("agendaSubtitle").textContent = `${selectedTasks.length} ${selectedTasks.length === 1 ? "actividad planeada" : "actividades planeadas"}`;
+        renderDailyService();
+        $("dayAgenda").innerHTML = renderAgenda(selectedTasks, "No hay nada en tu agenda para este día.", "Agrega una actividad y empieza a organizar tu semana.");
+        renderWeekBars(start);
+        renderUpcoming();
+      }
+
+      function renderDailyService() {
+        const date = parseDate(selectedDate);
+        const timer = timerForDate(selectedDate);
+        const isToday = selectedDate === dateKey(today);
+        const weekday = isWeekday(date);
+        const currentHours = serviceHours(selectedDate);
+        const targetHours = timerTargetHours(timer);
+        const reachedGoal = currentHours >= targetHours;
+        const finished = Boolean(timer?.endAt);
+        const paused = Boolean(timer?.pausedAt);
+        const segmentCount = Math.ceil(targetHours);
+        const meter = `<div class="service-meter-label"><span>Progreso de hoy</span><strong id="serviceHoursText">${formatHours(currentHours)} / ${formatHours(targetHours)} h</strong></div>
+          <div class="service-segments" id="serviceSegments" role="progressbar" aria-label="Horas de servicio social completadas hoy" aria-valuemin="0" aria-valuemax="${targetHours}" aria-valuenow="${formatHours(currentHours)}" style="grid-template-columns: repeat(${segmentCount}, minmax(0, 1fr))">
+            ${Array.from({ length: segmentCount }, () => '<span class="service-segment"><span></span></span>').join("")}
+          </div>
+          <div class="service-hour-labels" aria-hidden="true" style="grid-template-columns: repeat(${segmentCount}, minmax(0, 1fr))">${Array.from({ length: segmentCount }, (_, index) => `<span>${index + 1} h</span>`).join("")}</div>`;
+        let body;
+
+        if (!weekday) {
+          body = `<div class="service-disabled"><strong>Hoy toca descansar.</strong> El servicio social se organiza de lunes a viernes; la meta diaria es de 4 horas.</div>`;
+        } else if (timer) {
+          body = `<div class="service-active-row">
+            <div class="timer-orb" id="serviceTimerOrb" role="img" aria-label="Tiempo de servicio registrado"><span id="serviceTimerDisplay">00:00:00</span></div>
+            <div class="service-active-copy"><strong id="serviceTimerMessage">${finished ? "Jornada registrada" : paused ? "Jornada en pausa" : reachedGoal ? "Meta alcanzada, puedes continuar" : "Jornada en curso"}</strong>
+              <p>Inicio <strong id="serviceStartedAt"></strong> · salida estimada <strong id="serviceEndsAt"></strong><br><span id="serviceTimerHint"></span></p>
+              <div class="service-timer-actions">
+                ${finished ? "" : `<button class="secondary-button" id="toggleServicePauseButton" type="button"><i class="fa-solid ${paused ? "fa-play" : "fa-pause"}"></i> ${paused ? "Reanudar" : "Pausar"}</button><button class="primary-button" id="finishServiceButton" type="button"><i class="fa-solid fa-check"></i> Finalizar y registrar</button>`}
+                ${finished ? "" : `<div class="service-target-edit"><div class="service-time-field service-target-field"><label for="serviceTargetHours">Excepción (horas)</label><input id="serviceTargetHours" type="number" min="1" max="12" step="0.5" value="${targetHours}"></div><button class="secondary-button" id="saveServiceTargetButton" type="button"><i class="fa-solid fa-sliders"></i> Aplicar</button></div>`}
+                <button class="secondary-button" id="resetServiceButton" type="button"><i class="fa-solid fa-rotate-left"></i> Corregir registro</button>
+              </div>
+            </div>
+          </div>`;
+        } else if (isToday) {
+          const now = new Date();
+          body = `<div class="service-controls">
+            <div class="service-time-field"><label for="serviceStartTime">¿A qué hora comenzaste?</label><input id="serviceStartTime" type="time" value="${formatLocalTime(now)}"></div>
+            <div class="service-time-field service-target-field"><label for="serviceTargetHours">Horas de hoy</label><input id="serviceTargetHours" type="number" min="1" max="12" step="0.5" value="${DAILY_HOURS_GOAL}"></div>
+            <div class="service-estimate">Hora estimada de salida<br><strong id="serviceEstimatedEnd">${formatLocalTime(new Date(now.getTime() + DAILY_HOURS_GOAL * 3600000))}</strong></div>
+            <button class="primary-button service-start" id="startServiceButton" type="button"><i class="fa-solid fa-play"></i> Iniciar cronómetro</button>
+          </div><p class="service-notice">La meta normal es de ${DAILY_HOURS_GOAL} h. Si necesitas una excepción, modifica las horas antes de iniciar; el cronómetro se detendrá al alcanzarlas.</p>`;
+        } else {
+          body = `<div class="service-disabled"><strong>El cronómetro se inicia el mismo día del servicio.</strong> Vuelve a esta sección el día de tu jornada para registrar tu hora de inicio y ver la cuenta regresiva.</div>`;
+        }
+
+        $("dailyServicePanel").innerHTML = `<div class="service-header">
+          <div class="service-heading"><div class="service-icon"><i class="fa-solid fa-stopwatch"></i></div>
+            <div><h3 id="serviceTitle">Información diaria del servicio social</h3><p>Lunes a viernes · 4 horas al día</p></div>
+          </div>
+          <span class="service-badge ${finished || reachedGoal ? "finished" : ""}">${!weekday ? "Descanso" : timer ? (finished ? `Registrada · ${formatHours(currentHours)} h` : paused ? "En pausa" : reachedGoal ? "Meta alcanzada" : "En curso") : `Meta diaria · ${DAILY_HOURS_GOAL} h`}</span>
+        </div>${weekday ? meter : ""}${body}`;
+
+        if (timer) updateServiceTimerDisplay(timer);
+      }
+
+      function updateEstimatedEnd() {
+        const value = $("serviceStartTime")?.value;
+        if (!value) return;
+        const [hour, minute] = value.split(":").map(Number);
+        const target = Number($("serviceTargetHours")?.value);
+        const targetHours = target >= 1 && target <= 12 ? target : DAILY_HOURS_GOAL;
+        const end = new Date(parseDate(selectedDate));
+        end.setHours(hour + Math.floor(targetHours), minute + Math.round((targetHours % 1) * 60), 0, 0);
+        $("serviceEstimatedEnd").textContent = formatLocalTime(end);
+      }
+
+      function updateServiceMeter(date, now = Date.now()) {
+        const segments = $("serviceSegments");
+        if (!segments || date !== selectedDate) return;
+        const hours = serviceHours(date, now);
+        const targetHours = timerTargetHours(timerForDate(date));
+        segments.setAttribute("aria-valuenow", formatHours(hours));
+        segments.setAttribute("aria-valuemax", String(targetHours));
+        $("serviceHoursText").textContent = `${formatHours(hours)} / ${formatHours(targetHours)} h`;
+        const badge = $("dailyServicePanel").querySelector(".service-badge");
+        if (badge) {
+          const timer = timerForDate(date);
+          const complete = hours >= DAILY_HOURS_GOAL;
+          badge.textContent = timer?.endAt ? `Registrada · ${formatHours(hours)} h` : timer?.pausedAt ? "En pausa" : complete ? "Meta alcanzada" : "En curso";
+          badge.classList.toggle("finished", Boolean(timer?.endAt) || complete);
+        }
+        segments.querySelectorAll(".service-segment > span").forEach((segment, index) => {
+          segment.style.width = `${Math.max(0, Math.min(1, hours - index)) * 100}%`;
+        });
+      }
+
+      function updateServiceTimerDisplay(timer, now = Date.now()) {
+        if (!timer) return;
+        const startedAt = Number(timer.startAt);
+        const elapsed = workedMilliseconds(timer, now);
+        const targetHours = timerTargetHours(timer);
+        const remaining = Math.max(0, targetHours * 3600000 - elapsed);
+        const started = new Date(startedAt);
+        const estimatedEnd = new Date(now + remaining);
+        const display = $("serviceTimerDisplay");
+        const orb = $("serviceTimerOrb");
+        if (display) display.textContent = formatCountdown(elapsed / 1000);
+        if (orb) orb.style.setProperty("--progress", `${Math.min(100, elapsed / (targetHours * 3600000) * 100)}`);
+        if ($("serviceStartedAt")) $("serviceStartedAt").textContent = formatLocalTime(started);
+        if ($("serviceEndsAt")) $("serviceEndsAt").textContent = timer.endAt ? formatLocalTime(new Date(timer.endAt)) : timer.pausedAt ? "En pausa" : formatLocalTime(estimatedEnd);
+        if ($("serviceTimerMessage")) $("serviceTimerMessage").textContent = timer.endAt ? "Jornada registrada" : timer.pausedAt ? "Jornada en pausa" : remaining > 0 ? "Jornada en curso" : "Meta alcanzada, puedes continuar";
+        if ($("serviceTimerHint")) $("serviceTimerHint").textContent = timer.endAt
+          ? `Registraste ${formatHours(elapsed / 3600000)} horas. Puedes corregir el registro si hace falta.`
+          : timer.pausedAt
+            ? `${formatHours(elapsed / 3600000)} horas acumuladas. Reanuda cuando continúes.`
+            : remaining > 0
+              ? `Llevas ${formatHours(elapsed / 3600000)} h. Faltan ${formatCountdown(remaining / 1000)} para tu objetivo. Al alcanzarlo se registrará automáticamente.`
+              : `Llevas ${formatHours(elapsed / 3600000)} h y alcanzaste tu objetivo; la jornada se registrará automáticamente.`;
+        updateServiceMeter(selectedDate, now);
+      }
+
+      function updateServiceOnServer(date, timer) {
+        if (!isMongoConnected) return;
+        apiFetch(`/api/timers/${date}`, {
+          method: "PATCH",
+          body: JSON.stringify(timer)
+        }).catch((err) => console.warn("No se pudo actualizar la jornada en MongoDB:", err));
+      }
+
+      function toggleDailyServicePause() {
+        const timer = timerForDate(selectedDate);
+        if (!timer || timer.endAt) return;
+        const now = Date.now();
+        if (timer.pausedAt) {
+          timer.activeSince = now;
+          timer.pausedAt = null;
+        } else {
+          timer.elapsedMs = workedMilliseconds(timer, now);
+          timer.activeSince = null;
+          timer.pausedAt = now;
+        }
+        if (!persistServiceTimers()) return;
+        renderAll();
+        updateServiceOnServer(selectedDate, timer);
+        if (!timer.pausedAt && timerInterval === null) timerInterval = window.setInterval(tickServiceTimer, 1000);
+        tickServiceTimer();
+      }
+
+      function finishDailyService() {
+        const timer = timerForDate(selectedDate);
+        if (!timer || timer.endAt) return;
+        const now = Date.now();
+        timer.elapsedMs = workedMilliseconds(timer, now);
+        timer.endAt = now;
+        timer.activeSince = null;
+        timer.pausedAt = null;
+        timer.hoursWorked = Number((timer.elapsedMs / 3600000).toFixed(4));
+        if (!persistServiceTimers()) return;
+        renderAll();
+        updateServiceOnServer(selectedDate, timer);
+        tickServiceTimer();
+        showToast(`Jornada registrada: ${formatHours(timer.hoursWorked)} horas.`, "success");
+      }
+
+      function startDailyService() {
+        if (selectedDate !== dateKey(today)) {
+          showToast("Selecciona el día de hoy para iniciar el cronómetro.", "error");
+          return;
+        }
+        if (!isWeekday(today)) {
+          showToast("El servicio social se registra de lunes a viernes.", "error");
+          return;
+        }
+        const value = $("serviceStartTime").value;
+        const targetHours = Number($("serviceTargetHours").value);
+        if (!Number.isFinite(targetHours) || targetHours < 1 || targetHours > 12) {
+          showToast("Las horas de excepción deben estar entre 1 y 12.", "error");
+          return;
+        }
+        if (!value) {
+          showToast("Indica la hora en que comenzaste tu jornada.", "error");
+          return;
+        }
+        const [hour, minute] = value.split(":").map(Number);
+        const start = new Date(today);
+        start.setHours(hour, minute, 0, 0);
+        if (timerForDate(selectedDate)) {
+          showToast("Ya hay una jornada iniciada para hoy.", "error");
+          return;
+        }
+        if (start.getTime() > Date.now()) {
+          showToast("La hora de inicio no puede estar en el futuro.", "error");
+          return;
+        }
+        serviceTimers[selectedDate] = { startAt: start.getTime(), activeSince: start.getTime(), elapsedMs: 0, targetHours, notified: false };
+        if (!persistServiceTimers()) {
+          delete serviceTimers[selectedDate];
+          return;
+        }
+        renderAll();
+        requestServiceNotifications();
+        if (timerInterval === null) timerInterval = window.setInterval(tickServiceTimer, 1000);
+        tickServiceTimer();
+        showToast("Jornada iniciada. Tu salida estimada ya está calculada.", "success");
+        if (isMongoConnected) {
+          apiFetch('/api/timers', {
+            method: "POST",
+            body: JSON.stringify({ date: selectedDate, startAt: start.getTime(), activeSince: start.getTime(), elapsedMs: 0, targetHours, notified: false })
+          }).catch((err) => console.warn("No se pudo registrar la jornada en MongoDB:", err));
+        }
+      }
+
+      function requestServiceNotifications() {
+        if (!("Notification" in window) || Notification.permission !== "default") return;
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") showToast(`Te avisaremos cuando completes ${DAILY_HOURS_GOAL} horas.`, "success");
+        }).catch((error) => {
+          console.warn("No se pudo solicitar permiso para notificaciones:", error);
+        });
+      }
+
+      function resetDailyService() {
+        if (!timerForDate(selectedDate) || !window.confirm("¿Corregir la hora de inicio? Se reiniciará el cronómetro de hoy.")) return;
+        const timer = serviceTimers[selectedDate];
+        delete serviceTimers[selectedDate];
+        if (persistServiceTimers()) {
+          renderAll();
+          showToast("Puedes volver a ingresar tu hora de inicio.", "info");
+          if (isMongoConnected) {
+            apiFetch(`/api/timers/${selectedDate}`, { method: "DELETE" })
+              .catch((err) => console.warn("No se pudo eliminar la jornada en MongoDB:", err));
+          }
+        } else {
+          serviceTimers[selectedDate] = timer;
+        }
+      }
+
+      function saveServiceTarget() {
+        const timer = timerForDate(selectedDate);
+        const input = $("serviceTargetHours");
+        if (!timer || !input || timer.endAt) return;
+        const targetHours = Number(input.value);
+        if (!Number.isFinite(targetHours) || targetHours < 1 || targetHours > 12) {
+          showToast("Las horas de excepción deben estar entre 1 y 12.", "error");
+          return;
+        }
+        const elapsed = workedMilliseconds(timer, Date.now());
+        timer.targetHours = targetHours;
+        if (!persistServiceTimers()) return;
+        updateServiceOnServer(selectedDate, timer);
+        if (elapsed >= targetHours * 3600000) {
+          finishDailyService();
+        } else {
+          renderAll();
+          showToast(`Objetivo actualizado a ${formatHours(targetHours)} horas.`, "success");
+        }
+      }
+
+      function tickServiceTimer() {
+        const now = Date.now();
+        let hasActiveTimer = false;
+        for (const [date, timer] of Object.entries(serviceTimers)) {
+          const elapsed = workedMilliseconds(timer, now);
+          if (!timer.endAt && !timer.pausedAt) {
+            hasActiveTimer = true;
+          }
+          const targetHours = timerTargetHours(timer);
+          if (!timer.endAt && elapsed >= targetHours * 3600000) {
+            timer.elapsedMs = targetHours * 3600000;
+            timer.endAt = now;
+            timer.hoursWorked = Number(targetHours.toFixed(4));
+            timer.activeSince = null;
+            timer.pausedAt = null;
+            timer.notified = true;
+            persistServiceTimers();
+            if (isMongoConnected) {
+              apiFetch(`/api/timers/${date}`, {
+                method: "PATCH",
+                body: JSON.stringify({ elapsedMs: timer.elapsedMs, endAt: timer.endAt, hoursWorked: timer.hoursWorked, activeSince: null, pausedAt: null, notified: true })
+              }).catch(() => {});
+            }
+            showToast(`Jornada registrada automáticamente: ${formatHours(targetHours)} horas.`, "success");
+            renderAll();
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification("SnapDuty · Jornada registrada", { body: `Completaste ${formatHours(targetHours)} horas y el cronómetro se detuvo automáticamente.` });
+            }
+          } else if (!timer.endAt && !timer.pausedAt && elapsed >= targetHours * 3600000 && !timer.notified) {
+            timer.notified = true;
+            persistServiceTimers();
+          }
+        }
+        updateServiceTimerDisplay(timerForDate(selectedDate), now);
+        renderLiveTotals(now);
+        if (!hasActiveTimer && timerInterval !== null) {
+          window.clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function renderLiveTotals(now = Date.now()) {
+        const start = currentWeekStart();
+        const hours = hoursInWeek(start, now);
+        $("sidebarHours").textContent = formatHours(hours);
+        $("sidebarProgress").style.width = `${Math.min(100, hours / WEEKLY_HOURS_GOAL * 100)}%`;
+        $("sidebarCaption").textContent = hours >= WEEKLY_HOURS_GOAL ? "¡Meta semanal alcanzada!" : "4 horas por día, de lunes a viernes.";
+        $("weekDoneHours").textContent = formatHours(hours);
+        $("weekRemaining").textContent = hours >= WEEKLY_HOURS_GOAL
+          ? "¡Llegaste a tu meta de esta semana!"
+          : `Te ${hours > 0 ? `faltan ${formatHours(WEEKLY_HOURS_GOAL - hours)} horas` : "esperan"} para completar 20 horas.`;
+        renderWeekBars(start);
+        if (currentView === "overview") renderOverview();
+      }
+
+      function renderAgenda(dayTasks, emptyTitle, emptyMessage) {
+        if (!dayTasks.length) {
+          return `<div class="empty-state"><div class="empty-icon"><i class="fa-regular fa-calendar-plus"></i></div><h3>${emptyTitle}</h3><p>${emptyMessage}</p><button class="secondary-button" type="button" data-add-task><i class="fa-solid fa-plus"></i> Crear actividad</button></div>`;
+        }
+        return dayTasks.map((task) => `
+          <article class="task-row ${task.done ? "is-done" : ""}">
+            <div class="task-time">${escapeHtml(formatTime(task))}</div><div class="task-rail"><span class="task-dot"></span></div>
+            <div class="task-main">
+              <div class="task-title"><span class="task-title-text">${escapeHtml(task.title)}</span><span class="priority-tag priority-${escapeHtml(task.priority)}">${task.priority === "high" ? "Importante" : task.priority === "low" ? "Flexible" : "Normal"}</span><span class="status-tag ${task.done ? "done" : ""}">${task.done ? "Lista" : "Planeada"}</span></div>
+              <div class="task-category">${escapeHtml(task.category)}${duration(task) ? ` · ${formatHours(duration(task))} h` : ""}</div>
+              ${task.notes ? `<div class="task-note">${escapeHtml(task.notes)}</div>` : ""}
+            </div>
+            <div class="task-actions">
+              <button class="icon-button" type="button" data-toggle-task="${escapeHtml(task.id)}" aria-label="${task.done ? "Marcar pendiente" : "Marcar completada"}" title="${task.done ? "Marcar pendiente" : "Completar"}"><i class="fa-solid ${task.done ? "fa-rotate-left" : "fa-check"}"></i></button>
+              <button class="icon-button" type="button" data-edit-task="${escapeHtml(task.id)}" aria-label="Editar ${escapeHtml(task.title)}" title="Editar"><i class="fa-regular fa-pen-to-square"></i></button>
+              <button class="icon-button delete-button" type="button" data-delete-task="${escapeHtml(task.id)}" aria-label="Eliminar ${escapeHtml(task.title)}" title="Eliminar"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </article>`).join("");
+      }
+
+      function renderWeekBars(start) {
+        const names = ["L", "M", "M", "J", "V", "S", "D"];
+        const values = Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(start);
+          date.setDate(date.getDate() + index);
+          return serviceHours(dateKey(date));
+        });
+        const max = Math.max(4, ...values);
+        $("weekBars").innerHTML = values.map((value, index) => `<div class="bar-item" title="${formatHours(value)} horas completadas"><div class="bar-track"><div class="bar-fill" style="height:${value ? Math.max(8, value / max * 100) : 0}%"></div></div><span class="bar-label">${names[index]}</span></div>`).join("");
+      }
+
+      function renderUpcoming() {
+        const upcoming = tasks.filter((task) => !task.done && task.date >= dateKey(today))
+          .sort((a, b) => a.date.localeCompare(b.date) || (a.start || "99:99").localeCompare(b.start || "99:99")).slice(0, 3);
+        $("upcomingList").innerHTML = upcoming.length ? upcoming.map((task) => {
+          const date = parseDate(task.date);
+          return `<div class="upcoming-item"><div class="upcoming-date"><span>${date.toLocaleDateString("es-MX", { weekday: "short" })}</span><strong>${date.getDate()}</strong></div><div class="upcoming-copy"><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml(formatTime(task))} · ${escapeHtml(task.category)}</span></div></div>`;
+        }).join("") : `<p class="side-panel-copy">Todavía no tienes actividades próximas. Cuando estés listo, planeamos la primera.</p>`;
+      }
+
+      function monthTasks(date) { return sortedForDate(dateKey(date)); }
+
+      function renderCalendar() {
+        const year = monthCursor.getFullYear();
+        const month = monthCursor.getMonth();
+        $("calendarMonth").textContent = monthCursor.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+        const labels = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+        const first = new Date(year, month, 1, 12);
+        const offset = (first.getDay() + 6) % 7;
+        const gridStart = new Date(year, month, 1 - offset, 12);
+        const cells = labels.map((label) => `<div class="calendar-weekday">${label}</div>`).join("");
+        const days = Array.from({ length: 42 }, (_, index) => {
+          const date = new Date(gridStart);
+          date.setDate(gridStart.getDate() + index);
+          const key = dateKey(date);
+          const dayTasks = monthTasks(date);
+          const tags = dayTasks.slice(0, 2).map((task) => `<span class="calendar-event">${escapeHtml(task.title)}</span>`).join("");
+          const more = dayTasks.length > 2 ? `<span class="calendar-more">+${dayTasks.length - 2} más</span>` : "";
+          return `<button type="button" class="calendar-day ${date.getMonth() !== month ? "outside" : ""} ${key === dateKey(today) ? "today" : ""} ${key === selectedDate ? "selected" : ""}" data-calendar-date="${key}" aria-label="${formatDate(date, { weekday: "long", day: "numeric", month: "long" })}, ${dayTasks.length} actividades">
+            <span class="calendar-number">${date.getDate()}</span>${tags}${more}</button>`;
+        }).join("");
+        $("calendarGrid").innerHTML = cells + days;
+        const date = parseDate(selectedDate);
+        const dayTasks = sortedForDate(selectedDate);
+        $("calendarDayTitle").textContent = formatDate(date, { weekday: "long", day: "numeric", month: "long" });
+        $("calendarDaySubtitle").textContent = `${dayTasks.length} ${dayTasks.length === 1 ? "actividad" : "actividades"}`;
+        $("calendarDayAgenda").innerHTML = renderAgenda(dayTasks, "Un día despejado.", "Si quieres, puedes planear algo para esta fecha.");
+      }
+
+      function renderActivities() {
+        const query = $("activitySearch").value.trim().toLocaleLowerCase("es");
+        const status = $("activityStatusFilter").value;
+        const category = $("activityCategoryFilter").value;
+        const filtered = tasks.filter((task) => {
+          const matchesText = !query || `${task.title} ${task.category} ${task.notes || ""}`.toLocaleLowerCase("es").includes(query);
+          const matchesStatus = status === "all" || (status === "done" ? task.done : !task.done);
+          const matchesCategory = category === "all" || task.category === category;
+          return matchesText && matchesStatus && matchesCategory;
+        }).sort((a, b) => a.date.localeCompare(b.date) || (a.start || "99:99").localeCompare(b.start || "99:99"));
+
+        if (!filtered.length) {
+          const isEmpty = tasks.length === 0;
+          $("activityList").innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-list-check"></i></div><h3>${isEmpty ? "Tu lista empieza aquí." : "No encontramos actividades."}</h3><p>${isEmpty ? "Anota tus tareas, organiza tus horarios y lleva el ritmo de tu servicio social." : "Prueba con otra búsqueda o cambia los filtros."}</p>${isEmpty ? '<button class="secondary-button" type="button" data-add-task><i class="fa-solid fa-plus"></i> Crear primera actividad</button>' : ""}</div>`;
+          return;
+        }
+        $("activityList").innerHTML = filtered.map((task) => {
+          const date = parseDate(task.date);
+          return `<article class="activity-item">
+            <div class="activity-date"><span>${date.toLocaleDateString("es-MX", { weekday: "short" })}</span><strong>${date.getDate()}</strong></div>
+            <div><div class="activity-title">${escapeHtml(task.title)}${task.done ? ' <span class="status-tag done">Lista</span>' : ""}</div>
+              <div class="activity-meta"><span>${escapeHtml(formatDate(date, { month: "short", year: "numeric" }))}</span><span>${escapeHtml(formatTime(task))}</span><span>${escapeHtml(task.category)}</span>${duration(task) ? `<span>${formatHours(duration(task))} h</span>` : ""}</div></div>
+            <div class="activity-actions">
+              <button class="icon-button" type="button" data-toggle-task="${escapeHtml(task.id)}" aria-label="${task.done ? "Marcar pendiente" : "Completar"}"><i class="fa-solid ${task.done ? "fa-rotate-left" : "fa-check"}"></i></button>
+              <button class="icon-button" type="button" data-edit-task="${escapeHtml(task.id)}" aria-label="Editar ${escapeHtml(task.title)}"><i class="fa-regular fa-pen-to-square"></i></button>
+              <button class="icon-button" type="button" data-delete-task="${escapeHtml(task.id)}" aria-label="Eliminar ${escapeHtml(task.title)}"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </article>`;
+        }).join("");
+      }
+
+      function renderOverview() {
+        const completed = tasks.filter((task) => task.done);
+        const hours = Object.keys(serviceTimers).reduce((sum, date) => sum + serviceHours(date), 0);
+        const activeDays = Object.keys(serviceTimers).filter((date) => serviceHours(date) > 0).length;
+        $("allActivityCount").textContent = tasks.length;
+        $("allDoneCount").textContent = completed.length;
+        $("allDoneHours").textContent = `${formatHours(hours)} h`;
+        $("activeDaysCount").textContent = activeDays;
+        $("overviewGreeting").textContent = completed.length
+          ? `Ya diste ${completed.length} ${completed.length === 1 ? "paso" : "pasos"}.`
+          : "Cada aporte cuenta.";
+        $("overviewCaption").textContent = completed.length
+          ? `Has completado ${formatHours(hours)} horas de actividades. Todo avance merece ser reconocido.`
+          : "Tu camino de servicio social se construye actividad por actividad.";
+        const counts = CATEGORIES.map((category) => ({ category, count: tasks.filter((task) => task.category === category).length }));
+        const max = Math.max(1, ...counts.map((entry) => entry.count));
+        $("categoryBars").innerHTML = counts.map((entry) => `<div class="category-row"><span class="category-name">${escapeHtml(entry.category)}</span><span class="category-track"><span class="category-fill" style="display:block;width:${entry.count / max * 100}%"></span></span><span class="category-count">${entry.count}</span></div>`).join("");
+      }
+
+      function openModal(task = null, date = selectedDate) {
+        $("activityForm").reset();
+        $("activityId").value = task?.id || "";
+        $("activityTitle").value = task?.title || "";
+        $("activityDate").value = task?.date || date;
+        $("activityForm").querySelectorAll('input[name="category"]').forEach((input) => {
+          input.checked = input.value === (task?.category || "");
+        });
+        $("activityStart").value = task?.start || "";
+        $("activityEnd").value = task?.end || "";
+        $("activityPriority").value = task?.priority || "";
+        $("activityDone").value = task ? String(task.done) : "";
+        $("activityNotes").value = task?.notes || "";
+        $("modalTitle").textContent = task ? "Editar actividad" : "Nueva actividad";
+        $("deleteFromModal").classList.toggle("hidden", !task);
+        $("activityModal").classList.add("open");
+        window.setTimeout(() => $("activityTitle").focus(), 30);
+      }
+
+      function closeModal() {
+        $("activityModal").classList.remove("open");
+        $("activityForm").reset();
+        $("activityId").value = "";
+      }
+
+      function openCustomizationModal() {
+        applyInterfacePreferences();
+        $("customizationBackdrop").classList.add("open");
+        $("closeCustomization").focus();
+      }
+
+      function closeCustomizationModal() {
+        if (!$ ("customizationBackdrop").classList.contains("open")) return;
+        $("customizationBackdrop").classList.remove("open");
+        $("customizeButton").focus();
+      }
+
+      function submitActivity(event) {
+        event.preventDefault();
+        const id = $("activityId").value;
+        const title = $("activityTitle").value.trim();
+        const date = $("activityDate").value;
+        const start = $("activityStart").value;
+        const end = $("activityEnd").value;
+        const category = $("activityForm").querySelector('input[name="category"]:checked')?.value || "";
+        const priority = $("activityPriority").value;
+        const done = $("activityDone").value;
+        if (!title || !date || !parseDate(date).getTime()) {
+          showToast("Escribe un nombre y selecciona una fecha válida.", "error");
+          return;
+        }
+        if (!CATEGORIES.includes(category) || !["high", "medium", "low"].includes(priority) || !["true", "false"].includes(done)) {
+          showToast("Selecciona el área, la prioridad y el estado de la actividad.", "error");
+          return;
+        }
+        if (Boolean(start) !== Boolean(end)) {
+          showToast("Completa las dos horas o deja ambos campos vacíos.", "error");
+          return;
+        }
+        if (start && end && end <= start) {
+          showToast("La hora de término debe ser posterior a la hora de inicio.", "error");
+          return;
+        }
+        const existing = tasks.find((task) => task.id === id);
+        const next = {
+          id: existing?.id || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+          title: title.slice(0, 120),
+          date,
+          category,
+          start,
+          end,
+          priority,
+          notes: $("activityNotes").value.trim().slice(0, 500),
+          done: done === "true",
+          createdAt: existing?.createdAt || new Date().toISOString()
+        };
+        if (existing) tasks = tasks.map((task) => task.id === id ? next : task);
+        else tasks.push(next);
+        selectedDate = date;
+        monthCursor = new Date(parseDate(date).getFullYear(), parseDate(date).getMonth(), 1, 12);
+        closeModal();
+        if (persistTasks()) showToast(existing ? "Actividad actualizada." : "Actividad agregada a tu agenda.", "success");
+        if (isMongoConnected) {
+          apiFetch('/api/activities', {
+            method: "POST",
+            body: JSON.stringify(next)
+          }).catch((err) => console.warn("Error guardando actividad en MongoDB:", err));
+        }
+      }
+
+      function toggleTask(id) {
+        const task = tasks.find((entry) => entry.id === id);
+        if (!task) return;
+        tasks = tasks.map((entry) => entry.id === id ? { ...entry, done: !entry.done } : entry);
+        if (persistTasks()) showToast(task.done ? "Actividad marcada como pendiente." : "¡Actividad completada! Buen trabajo.", "success");
+        if (isMongoConnected) {
+          apiFetch(`/api/activities/${id}/toggle`, { method: "PATCH" })
+            .catch((err) => console.warn("Error al actualizar estado en MongoDB:", err));
+        }
+      }
+
+      function deleteTask(id) {
+        const task = tasks.find((entry) => entry.id === id);
+        if (!task || !window.confirm(`¿Eliminar "${task.title}" de tu agenda?`)) return;
+        tasks = tasks.filter((entry) => entry.id !== id);
+        if (persistTasks()) showToast("Actividad eliminada.", "info");
+        if (isMongoConnected) {
+          apiFetch(`/api/activities/${id}`, { method: "DELETE" })
+            .catch((err) => console.warn("Error al eliminar en MongoDB:", err));
+        }
+      }
+
+      function setView(view) {
+        if (!["week", "calendar", "activities", "overview"].includes(view)) return;
+        currentView = view;
+        document.querySelectorAll(".view").forEach((element) => element.classList.toggle("active", element.id === `view-${view}`));
+        document.querySelectorAll(".nav-link").forEach((element) => {
+          const active = element.dataset.view === view;
+          element.classList.toggle("active", active);
+          element.setAttribute("aria-current", active ? "page" : "false");
+        });
+        const labels = { week: "Mi semana", calendar: "Calendario", activities: "Actividades", overview: "Mi impacto" };
+        $("breadcrumbName").textContent = labels[view];
+        renderAll();
+      }
+
+      function moveSelectedDate(value) {
+        selectedDate = value;
+        const date = parseDate(value);
+        monthCursor = new Date(date.getFullYear(), date.getMonth(), 1, 12);
+        const start = weekStart(date);
+        const thisStart = weekStart(today);
+        weekOffset = Math.round((start - thisStart) / (7 * 24 * 60 * 60 * 1000));
+        renderAll();
+      }
+
+      function changeWeek(amount) {
+        weekOffset += amount;
+        const selected = parseDate(selectedDate);
+        selected.setDate(selected.getDate() + amount * 7);
+        selectedDate = dateKey(selected);
+        renderAll();
+      }
+
+      function exportJson() {
+        const data = {
+          exportedAt: new Date().toISOString(),
+          weeklyGoal: WEEKLY_HOURS_GOAL,
+          dailyGoal: DAILY_HOURS_GOAL,
+          activities: tasks,
+          serviceTimers
+        };
+        downloadFile(JSON.stringify(data, null, 2), `snapduty-agenda-${dateKey(today)}.json`, "application/json");
+        showToast("Respaldo de tu agenda descargado.", "success");
+      }
+
+      function exportCsv() {
+        const headers = ["Actividad", "Fecha", "Inicio", "Fin", "Área", "Prioridad", "Estado", "Notas", "Horas"];
+        const rows = [...tasks].sort((a, b) => a.date.localeCompare(b.date)).map((task) => [
+          task.title, task.date, task.start || "", task.end || "", task.category,
+          task.priority === "high" ? "Importante" : task.priority === "low" ? "Flexible" : "Normal",
+          task.done ? "Completada" : "Planeada", task.notes || "", formatHours(duration(task))
+        ]);
+        const csv = [headers, ...rows].map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        downloadFile(`\uFEFF${csv}`, `snapduty-actividades-${dateKey(today)}.csv`, "text/csv;charset=utf-8");
+        showToast("Lista de actividades descargada.", "success");
+      }
+
+      function downloadFile(content, filename, type) {
+        const url = URL.createObjectURL(new Blob([content], { type }));
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      document.querySelectorAll(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
+      document.querySelectorAll("[data-go-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.goView)));
+      $("customizeButton").addEventListener("click", openCustomizationModal);
+      $("closeCustomization").addEventListener("click", closeCustomizationModal);
+      $("customizationBackdrop").addEventListener("click", (event) => {
+        if (event.target === $("customizationBackdrop")) {
+          closeCustomizationModal();
+          return;
+        }
+        const paletteChoice = event.target.closest("[data-palette]");
+        const densityChoice = event.target.closest("[data-density]");
+        if (paletteChoice) interfacePreferences.palette = paletteChoice.dataset.palette;
+        if (densityChoice) interfacePreferences.density = densityChoice.dataset.density;
+        if (event.target.closest("#motionSwitch")) interfacePreferences.reduceMotion = !interfacePreferences.reduceMotion;
+        if (paletteChoice || densityChoice || event.target.closest("#motionSwitch")) {
+          applyInterfacePreferences();
+          saveInterfacePreferences();
+        }
+      });
+      $("newActivityButton").addEventListener("click", () => openModal());
+      $("addForDay").addEventListener("click", () => openModal(null, selectedDate));
+      $("addCalendarDay").addEventListener("click", () => openModal(null, selectedDate));
+      $("closeModal").addEventListener("click", closeModal);
+      $("cancelModal").addEventListener("click", closeModal);
+      $("activityForm").addEventListener("submit", submitActivity);
+      $("activityModal").addEventListener("click", (event) => {
+        if (event.target === $("activityModal")) closeModal();
+      });
+      $("deleteFromModal").addEventListener("click", () => {
+        const id = $("activityId").value;
+        closeModal();
+        deleteTask(id);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeModal();
+          closeCustomizationModal();
+        }
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n") {
+          event.preventDefault();
+          openModal();
+        }
+      });
+
+      $("prevWeek").addEventListener("click", () => changeWeek(-1));
+      $("nextWeek").addEventListener("click", () => changeWeek(1));
+      $("thisWeek").addEventListener("click", () => { weekOffset = 0; selectedDate = dateKey(today); renderAll(); });
+      $("prevMonth").addEventListener("click", () => { monthCursor.setMonth(monthCursor.getMonth() - 1); renderCalendar(); });
+      $("nextMonth").addEventListener("click", () => { monthCursor.setMonth(monthCursor.getMonth() + 1); renderCalendar(); });
+      $("calendarToday").addEventListener("click", () => { moveSelectedDate(dateKey(today)); setView("calendar"); });
+
+      $("weekStrip").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-select-date]");
+        if (button) { selectedDate = button.dataset.selectDate; renderWeek(); }
+      });
+      $("calendarGrid").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-calendar-date]");
+        if (button) moveSelectedDate(button.dataset.calendarDate);
+      });
+      document.addEventListener("click", (event) => {
+        const toggle = event.target.closest("[data-toggle-task]");
+        const edit = event.target.closest("[data-edit-task]");
+        const remove = event.target.closest("[data-delete-task]");
+        const add = event.target.closest("[data-add-task]");
+        if (toggle) toggleTask(toggle.dataset.toggleTask);
+        else if (edit) {
+          const task = tasks.find((entry) => entry.id === edit.dataset.editTask);
+          if (task) openModal(task);
+        } else if (remove) deleteTask(remove.dataset.deleteTask);
+        else if (add) openModal(null, selectedDate);
+      });
+
+      $("activitySearch").addEventListener("input", renderActivities);
+      $("activityStatusFilter").addEventListener("change", renderActivities);
+      $("activityCategoryFilter").addEventListener("change", renderActivities);
+      $("dailyServicePanel").addEventListener("input", (event) => {
+        if (event.target.id === "serviceStartTime" || event.target.id === "serviceTargetHours") updateEstimatedEnd();
+      });
+      $("dailyServicePanel").addEventListener("click", (event) => {
+        if (event.target.closest("#startServiceButton")) startDailyService();
+        if (event.target.closest("#toggleServicePauseButton")) toggleDailyServicePause();
+        if (event.target.closest("#finishServiceButton")) finishDailyService();
+        if (event.target.closest("#saveServiceTargetButton")) saveServiceTarget();
+        if (event.target.closest("#resetServiceButton")) resetDailyService();
+      });
+      $("themeToggle").addEventListener("click", () => {
+        const dark = document.documentElement.classList.toggle("dark");
+        const themeVal = dark ? "dark" : "light";
+        applyInterfacePreferences();
+        document.querySelector('meta[name="theme-color"]').content = dark ? "#151c28" : "#f7f8f6";
+        try {
+          localStorage.setItem(THEME_KEY, themeVal);
+          if (isMongoConnected) {
+            apiFetch('/api/settings/theme', {
+              method: "PUT",
+              body: JSON.stringify({ value: themeVal })
+            }).catch((e) => console.warn("No se pudo guardar tema en MongoDB:", e));
+          }
+        } catch (error) {
+          console.error("No se pudo guardar el tema:", error);
+          showToast("No se pudo guardar tu preferencia de tema.", "error");
+        }
+        $("themeToggle").innerHTML = `<i class="fa-regular ${dark ? "fa-sun" : "fa-moon"}"></i>`;
+        $("themeToggle").setAttribute("aria-label", dark ? "Activar tema claro" : "Activar tema oscuro");
+      });
+      $("exportButton").addEventListener("click", exportJson);
+      $("exportCsvButton").addEventListener("click", exportCsv);
+      $("reflectionNote").value = localStorage.getItem(REFLECTION_KEY) || "";
+      $("reflectionNote").addEventListener("change", () => {
+        const noteVal = $("reflectionNote").value.trim();
+        try {
+          localStorage.setItem(REFLECTION_KEY, noteVal);
+          showToast("Reflexión guardada.", "success");
+          if (isMongoConnected) {
+            apiFetch('/api/settings/reflection', {
+              method: "PUT",
+              body: JSON.stringify({ value: noteVal })
+            }).catch((e) => console.warn("No se pudo guardar reflexión en MongoDB:", e));
+          }
+        } catch (error) {
+          console.error("No se pudo guardar la reflexión:", error);
+          showToast("No se pudo guardar la reflexión en este navegador.", "error");
+        }
+      });
+
+      // ==================== AUTH & PROFILE LISTENERS ====================
+      $("userProfileBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!getAuthToken()) {
+          openAuthModal();
+          return;
+        }
+        $("userProfileDropdown").classList.toggle("open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#userProfileWrap")) {
+          $("userProfileDropdown").classList.remove("open");
+        }
+      });
+
+      $("dropdownSwitchUserBtn").addEventListener("click", () => {
+        $("userProfileDropdown").classList.remove("open");
+        openAuthModal();
+      });
+
+      $("dropdownLogoutBtn").addEventListener("click", () => {
+        $("userProfileDropdown").classList.remove("open");
+        clearAuthSession();
+        showToast("Sesión cerrada correctamente.", "info");
+      });
+
+      $("tabLoginBtn").addEventListener("click", () => {
+        $("tabLoginBtn").classList.add("active");
+        $("tabRegisterBtn").classList.remove("active");
+        $("loginForm").classList.remove("hidden");
+        $("registerForm").classList.add("hidden");
+        $("authErrorBanner").classList.remove("active");
+      });
+
+      $("tabRegisterBtn").addEventListener("click", () => {
+        $("tabRegisterBtn").classList.add("active");
+        $("tabLoginBtn").classList.remove("active");
+        $("registerForm").classList.remove("hidden");
+        $("loginForm").classList.add("hidden");
+        $("authErrorBanner").classList.remove("active");
+      });
+
+      $("toggleLoginPass").addEventListener("click", () => {
+        const input = $("loginPassword");
+        const isPass = input.type === "password";
+        input.type = isPass ? "text" : "password";
+        $("toggleLoginPass").innerHTML = `<i class="fa-regular ${isPass ? "fa-eye-slash" : "fa-eye"}"></i>`;
+      });
+
+      $("toggleRegPass").addEventListener("click", () => {
+        const input = $("regPassword");
+        const isPass = input.type === "password";
+        input.type = isPass ? "text" : "password";
+        $("toggleRegPass").innerHTML = `<i class="fa-regular ${isPass ? "fa-eye-slash" : "fa-eye"}"></i>`;
+      });
+
+      $("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = $("loginEmail").value.trim();
+        const password = $("loginPassword").value;
+        const btn = $("loginSubmitBtn");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || "Credenciales incorrectas");
+
+          setAuthSession(json.token, json.user);
+          closeAuthModal();
+          showToast(`¡Hola de nuevo, ${json.user.name}!`, "success");
+          await initMongoSync();
+        } catch (err) {
+          showAuthError(err.message || "Error al iniciar sesión");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar a mi espacio';
+        }
+      });
+
+      $("registerForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = $("regName").value.trim();
+        const institution = $("regInstitution").value.trim();
+        const email = $("regEmail").value.trim();
+        const password = $("regPassword").value;
+        const btn = $("regSubmitBtn");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando cuenta...';
+
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, institution, email, password })
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || "No se pudo registrar la cuenta");
+
+          setAuthSession(json.token, json.user);
+          closeAuthModal();
+          showToast(`¡Bienvenido a SnapDuty, ${json.user.name}!`, "success");
+          await initMongoSync();
+        } catch (err) {
+          showAuthError(err.message || "Error al registrar la cuenta");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Registrarse e iniciar';
+        }
+      });
+
+      async function loginWithCredentials(email, password) {
+        try {
+          showToast("Conectando con sesión demo...", "info");
+          const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || "Error al conectar demo");
+
+          setAuthSession(json.token, json.user);
+          closeAuthModal();
+          showToast(`Sesión activa: ${json.user.name}`, "success");
+          await initMongoSync();
+        } catch (err) {
+          showAuthError(err.message);
+        }
+      }
+
+      $("demoCarlosBtn").addEventListener("click", () => {
+        loginWithCredentials("carlos.demo@snapduty.com", "Password123!");
+      });
+
+      $("demoSofiaBtn").addEventListener("click", () => {
+        loginWithCredentials("sofia.garcia@snapduty.com", "Password123!");
+      });
+
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+        document.querySelector('meta[name="theme-color"]').content = "#151c28";
+        $("themeToggle").innerHTML = '<i class="fa-regular fa-sun"></i>';
+        $("themeToggle").setAttribute("aria-label", "Activar tema claro");
+      }
+      applyInterfacePreferences();
+      renderAll();
+
+      async function initMongoSync() {
+        if (LOCAL_PREVIEW) {
+          currentUser = {
+            name: "Vista previa",
+            email: "local@snapduty.test",
+            institution: "Modo local",
+            dailyHours: 4,
+            weeklyHours: 20,
+            totalHours: 480
+          };
+          updateUserUI(currentUser);
+          updateDbBadge(false, "Vista local");
+          return;
+        }
+
+        try {
+          updateDbBadge(false, "Conectando...");
+          const token = getAuthToken();
+
+          if (!token) {
+            updateDbBadge(false, "Sin sesión");
+            openAuthModal();
+            return;
+          }
+
+          const res = await apiFetch("/api/bootstrap");
+          if (!res.ok) {
+            if (res.status === 401) {
+              clearAuthSession();
+              return;
+            }
+            throw new Error("API no disponible");
+          }
+
+          const json = await res.json();
+          if (!json.success) throw new Error(json.error || "Error al obtener datos");
+
+          updateDbBadge(true, "MongoDB Conectado");
+          const { data } = json;
+
+          currentUser = data.user;
+          updateUserUI(currentUser);
+
+          tasks = data.activities || [];
+          serviceTimers = data.serviceTimers || {};
+          localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+          localStorage.setItem(SERVICE_TIMERS_KEY, JSON.stringify(serviceTimers));
+
+          if (data.reflection !== undefined && data.reflection !== null && $("reflectionNote")) {
+            $("reflectionNote").value = data.reflection;
+            localStorage.setItem(REFLECTION_KEY, data.reflection);
+          }
+
+          if (data.theme) {
+            const isDark = data.theme === "dark";
+            document.documentElement.classList.toggle("dark", isDark);
+            document.querySelector('meta[name="theme-color"]').content = isDark ? "#151c28" : "#f7f8f6";
+            $("themeToggle").innerHTML = `<i class="fa-regular ${isDark ? "fa-sun" : "fa-moon"}"></i>`;
+            $("themeToggle").setAttribute("aria-label", isDark ? "Activar tema claro" : "Activar tema oscuro");
+            localStorage.setItem(THEME_KEY, data.theme);
+          }
+
+          interfacePreferences = normalizeInterfacePreferences(data.interfacePreferences || loadInterfacePreferences());
+          localStorage.setItem(interfaceStorageKey(), JSON.stringify(interfacePreferences));
+          applyInterfacePreferences();
+
+          renderAll();
+
+          if (Object.values(serviceTimers).some((timer) => !timer.endAt && !timer.pausedAt)) {
+            if (timerInterval === null) timerInterval = window.setInterval(tickServiceTimer, 1000);
+            tickServiceTimer();
+          } else if (timerForDate(selectedDate)) {
+            tickServiceTimer();
+          }
+        } catch (err) {
+          console.warn("MongoDB API no disponible:", err);
+          updateDbBadge(false, "Modo Local");
+        }
+      }
+
+      const cachedUser = getCurrentUser();
+      if (cachedUser) {
+        updateUserUI(cachedUser);
+      }
+      initMongoSync();
+    })();
+  </script>
+</body>
+</html>

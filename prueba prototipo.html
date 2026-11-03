@@ -534,10 +534,34 @@
       border-radius: 14px; padding: 32px 30px 28px;
       box-shadow: 0 18px 44px rgba(0, 0, 0, .2);
       transform: translateY(24px) scale(0.96);
-      transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .25s ease;
       position: relative; overflow: hidden;
+      will-change: transform;
     }
     .auth-backdrop.active .auth-card { transform: translateY(0) scale(1); }
+    .auth-card:hover { box-shadow: 0 24px 56px rgba(0, 0, 0, .24); }
+    #registerForm .auth-form-group {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: end;
+    }
+    #registerForm .auth-field {
+      min-width: 0;
+    }
+    #registerForm .auth-field:nth-child(3),
+    #registerForm .auth-field:nth-child(4) {
+      grid-column: span 1;
+    }
+    #registerForm .auth-submit-btn {
+      grid-column: 2;
+      align-self: end;
+      width: 100%;
+    }
+    .auth-close-btn {
+      position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--surface-soft); color: var(--text-soft);
+      display: grid; place-items: center; cursor: pointer; transition: all .2s ease;
+    }
+    .auth-close-btn:hover { border-color: var(--accent); color: var(--accent-strong); background: color-mix(in srgb, var(--accent-wash) 70%, transparent); }
     .auth-header { text-align: center; margin-bottom: 22px; }
     .auth-logo-badge {
       width: 60px; height: 60px; margin: 0 auto 14px; border-radius: 14px;
@@ -725,6 +749,8 @@
       .modal { width: 100%; max-height: calc(100dvh - 24px); padding: 16px; border-radius: 18px; }
       .auth-backdrop { align-items: flex-start; overflow-y: auto; padding: 12px; }
       .auth-card { max-width: 440px; margin: auto; padding: 26px 20px 22px; border-radius: 22px; }
+      #registerForm .auth-form-group { grid-template-columns: 1fr; }
+      #registerForm .auth-submit-btn { grid-column: auto; }
       .customization-modal { padding: 18px; }
       .toast-container { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; }
       .toast { max-width: none; }
@@ -791,7 +817,7 @@
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
 
-    /* SnapDuty: capa de diseno */
+    /* SnapDuty: capa de diseno para pruebas locales */
     :root {
       --on-accent: #fff;
       --r-sm: 10px; --r-md: 14px; --r-lg: 20px;
@@ -1646,7 +1672,10 @@
 
   <!-- ==================== AUTHENTICATION MODAL ==================== -->
   <div class="auth-backdrop" id="authBackdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="auth-card">
+    <div class="auth-card" id="authCard">
+      <button class="auth-close-btn" id="closeAuthModalBtn" type="button" aria-label="Volver a la pantalla principal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
       <div class="auth-header">
         <div class="auth-logo-badge">
           <img class="gemini-brand-image" src="/logo.png" alt="">
@@ -1750,6 +1779,7 @@
     (() => {
       "use strict";
 
+      const LOCAL_PREVIEW = true;
       const TASKS_KEY = "marea_planner_activities_v1";
       const THEME_KEY = "servicio_social_theme";
       const SERVICE_TIMERS_KEY = "marea_daily_service_timers_v1";
@@ -1799,7 +1829,7 @@
       let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1, 12);
       let currentView = "week";
       let timerInterval = null;
-      const API_BASE = window.location.origin.startsWith("http") ? "" : "http://localhost:3000";
+      const API_BASE = LOCAL_PREVIEW ? "" : (window.location.origin.startsWith("http") ? "" : "http://localhost:3000");
       let isMongoConnected = false;
       let interfacePreferences = loadInterfacePreferences();
 
@@ -1871,6 +1901,13 @@
       }
 
       async function apiFetch(endpoint, options = {}) {
+        if (LOCAL_PREVIEW) {
+          return new Response(JSON.stringify({ success: true, data: {} }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
         const token = getAuthToken();
         const headers = {
           "Content-Type": "application/json",
@@ -1896,14 +1933,9 @@
       }
 
       function openAuthModal(msg = "") {
-        const banner = $("authErrorBanner");
-        if (msg) {
-          $("authErrorMsg").textContent = msg;
-          banner.classList.add("active");
-        } else {
-          banner.classList.remove("active");
-        }
-        $("authBackdrop").classList.add("active");
+        const loginUrl = new URL("/login.html", window.location.origin);
+        if (msg) loginUrl.searchParams.set("message", msg);
+        window.location.replace(loginUrl);
       }
 
       function closeAuthModal() {
@@ -2702,6 +2734,18 @@
         $("categoryBars").innerHTML = counts.map((entry) => `<div class="category-row"><span class="category-name">${escapeHtml(entry.category)}</span><span class="category-track"><span class="category-fill" style="display:block;width:${entry.count / max * 100}%"></span></span><span class="category-count">${entry.count}</span></div>`).join("");
       }
 
+      function validateActivityTimeRange() {
+        const start = $("activityStart").value;
+        const end = $("activityEnd").value;
+
+        if (!start || !end) return true;
+        if (end <= start) {
+          showToast("La hora de término debe ser posterior a la hora de inicio.", "error");
+          return false;
+        }
+        return true;
+      }
+
       function openModal(task = null, date = selectedDate) {
         $("activityForm").reset();
         $("activityId").value = task?.id || "";
@@ -2761,8 +2805,7 @@
           showToast("Completa las dos horas o deja ambos campos vacíos.", "error");
           return;
         }
-        if (start && end && end <= start) {
-          showToast("La hora de término debe ser posterior a la hora de inicio.", "error");
+        if (!validateActivityTimeRange()) {
           return;
         }
         const existing = tasks.find((task) => task.id === id);
@@ -2951,6 +2994,16 @@
       $("newActivityButton").addEventListener("click", () => openModal());
       $("addForDay").addEventListener("click", () => openModal(null, selectedDate));
       $("addCalendarDay").addEventListener("click", () => openModal(null, selectedDate));
+      $("activityStart").addEventListener("input", () => {
+        if ($("activityStart").value && $("activityEnd").value) {
+          validateActivityTimeRange();
+        }
+      });
+      $("activityEnd").addEventListener("input", () => {
+        if ($("activityStart").value && $("activityEnd").value) {
+          validateActivityTimeRange();
+        }
+      });
       $("closeModal").addEventListener("click", closeModal);
       $("cancelModal").addEventListener("click", closeModal);
       $("activityForm").addEventListener("submit", submitActivity);
@@ -3081,6 +3134,29 @@
         showToast("Sesión cerrada correctamente.", "info");
       });
 
+      $("closeAuthModalBtn").addEventListener("click", () => {
+        closeAuthModal();
+      });
+
+      const authCard = $("authCard");
+      const authBackdrop = $("authBackdrop");
+
+      if (authCard && authBackdrop) {
+        authBackdrop.addEventListener("pointermove", (event) => {
+          if (!authBackdrop.classList.contains("active")) return;
+          const rect = authCard.getBoundingClientRect();
+          const offsetX = (event.clientX - rect.left) / rect.width;
+          const offsetY = (event.clientY - rect.top) / rect.height;
+          const rotateY = (offsetX - 0.5) * 8;
+          const rotateX = (0.5 - offsetY) * 8;
+          authCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(0) scale(1)`;
+        });
+
+        authBackdrop.addEventListener("pointerleave", () => {
+          authCard.style.transform = "";
+        });
+      }
+
       $("tabLoginBtn").addEventListener("click", () => {
         $("tabLoginBtn").classList.add("active");
         $("tabRegisterBtn").classList.remove("active");
@@ -3210,6 +3286,20 @@
       renderAll();
 
       async function initMongoSync() {
+        if (LOCAL_PREVIEW) {
+          currentUser = {
+            name: "Vista previa",
+            email: "local@snapduty.test",
+            institution: "Modo local",
+            dailyHours: 4,
+            weeklyHours: 20,
+            totalHours: 480
+          };
+          updateUserUI(currentUser);
+          updateDbBadge(false, "Vista local");
+          return;
+        }
+
         try {
           updateDbBadge(false, "Conectando...");
           const token = getAuthToken();
