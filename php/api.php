@@ -598,20 +598,5 @@ function handleApiRequest(string $path, string $method): void
         ]]);
     }
 
-    if (($segments[1] ?? '') === 'export') {
-        $user = requireAuth();
-        $pdo = getPdo();
-        $activities = $pdo->prepare('SELECT * FROM activities WHERE user_id = :user_id');
-        $activities->execute([':user_id' => (int) $user['id']]);
-        $timers = $pdo->prepare('SELECT * FROM service_timers WHERE user_id = :user_id');
-        $timers->execute([':user_id' => (int) $user['id']]);
-        $settings = $pdo->prepare('SELECT * FROM user_settings WHERE user_id = :user_id');
-        $settings->execute([':user_id' => (int) $user['id']]);
-        $reflections = $pdo->prepare('SELECT * FROM reflections WHERE user_id = :user_id');
-        $reflections->execute([':user_id' => (int) $user['id']]);
-
-        sendJson(200, ['exportedAt' => gmdate('c'), 'appName' => 'SnapDuty', 'user' => ['name' => $user['name'], 'email' => $user['email'], 'institution' => $user['institution']], 'data' => ['activities' => $activities->fetchAll(), 'serviceTimers' => $timers->fetchAll(), 'settings' => $settings->fetchAll(), 'reflections' => $reflections->fetchAll()]]);
-    }
-
     sendJson(404, ['success' => false, 'error' => 'Endpoint no encontrado']);
 }

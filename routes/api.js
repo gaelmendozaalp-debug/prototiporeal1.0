@@ -697,35 +697,4 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// 9. Respaldo y Restauración por usuario
-router.get('/export', async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const [activities, timers, settings, reflections] = await Promise.all([
-      Activity.find({ userId }).lean(),
-      ServiceTimer.find({ userId }).lean(),
-      Setting.find({ userId }).lean(),
-      Reflection.find({ userId }).lean()
-    ]);
-
-    res.json({
-      exportedAt: new Date().toISOString(),
-      appName: 'SnapDuty',
-      user: {
-        name: req.user.name,
-        email: req.user.email,
-        institution: req.user.institution
-      },
-      data: {
-        activities,
-        serviceTimers: timers,
-        settings,
-        reflections
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 module.exports = router;

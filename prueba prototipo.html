@@ -162,7 +162,7 @@
     .breadcrumb strong { color: var(--text); font-weight: 700; }
     .top-actions { display: flex; align-items: center; gap: 9px; }
     .db-status-badge {
-      display: inline-flex;
+      display: none !important;
       align-items: center;
       gap: 8px;
       padding: 0 14px;
@@ -696,7 +696,6 @@
       .topbar { align-items: center; }
       .breadcrumb { display: none; }
       .top-actions { width: 100%; justify-content: space-between; }
-      .top-actions .export-button { display: none; }
       .db-status-badge span#dbStatusText { display: none; }
       .db-status-badge { padding: 0 10px; min-height: 38px; }
       .user-profile-btn { max-width: min(150px, 35vw); }
@@ -1416,13 +1415,8 @@
       <header class="topbar">
         <div class="breadcrumb">Tu espacio <span aria-hidden="true">/</span> <strong id="breadcrumbName">Mi semana</strong></div>
         <div class="top-actions">
-          <div class="db-status-badge" id="dbStatusBadge" title="Estado de conexión con MongoDB">
-            <span class="db-indicator-dot"></span>
-            <span id="dbStatusText">Conectando...</span>
-          </div>
           <button class="icon-button" id="customizeButton" type="button" aria-label="Personalizar interfaz" title="Personalizar interfaz"><i class="fa-solid fa-sliders"></i></button>
           <button class="icon-button" id="themeToggle" type="button" aria-label="Activar tema oscuro" title="Cambiar tema"><i class="fa-regular fa-moon"></i></button>
-          <button class="secondary-button export-button" id="exportButton" type="button"><i class="fa-solid fa-arrow-up-from-bracket"></i> Exportar</button>
           <button class="primary-button" id="newActivityButton" type="button" aria-label="Nueva actividad"><i class="fa-solid fa-plus"></i><span>Nueva actividad</span></button>
           
           <div class="user-profile-wrap" id="userProfileWrap">
@@ -1541,7 +1535,6 @@
         <section class="view" id="view-activities" aria-labelledby="activitiesTitle">
           <div class="page-heading">
             <div><h1 id="activitiesTitle">Tus actividades.</h1><p>Todo lo que estás planeando y todo lo que ya lograste.</p></div>
-            <button class="secondary-button" id="exportCsvButton" type="button"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
           </div>
           <div class="activity-toolbar">
             <label class="sr-only" for="activitySearch">Buscar actividades</label>
@@ -2889,41 +2882,6 @@
         renderAll();
       }
 
-      function exportJson() {
-        const data = {
-          exportedAt: new Date().toISOString(),
-          weeklyGoal: WEEKLY_HOURS_GOAL,
-          dailyGoal: DAILY_HOURS_GOAL,
-          activities: tasks,
-          serviceTimers
-        };
-        downloadFile(JSON.stringify(data, null, 2), `snapduty-agenda-${dateKey(today)}.json`, "application/json");
-        showToast("Respaldo de tu agenda descargado.", "success");
-      }
-
-      function exportCsv() {
-        const headers = ["Actividad", "Fecha", "Inicio", "Fin", "Área", "Prioridad", "Estado", "Notas", "Horas"];
-        const rows = [...tasks].sort((a, b) => a.date.localeCompare(b.date)).map((task) => [
-          task.title, task.date, task.start || "", task.end || "", task.category,
-          task.priority === "high" ? "Importante" : task.priority === "low" ? "Flexible" : "Normal",
-          task.done ? "Completada" : "Planeada", task.notes || "", formatHours(duration(task))
-        ]);
-        const csv = [headers, ...rows].map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\r\n");
-        downloadFile(`\uFEFF${csv}`, `snapduty-actividades-${dateKey(today)}.csv`, "text/csv;charset=utf-8");
-        showToast("Lista de actividades descargada.", "success");
-      }
-
-      function downloadFile(content, filename, type) {
-        const url = URL.createObjectURL(new Blob([content], { type }));
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = filename;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
-      }
-
       document.querySelectorAll(".nav-link").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
       document.querySelectorAll("[data-go-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.goView)));
       $("customizeButton").addEventListener("click", openCustomizationModal);
@@ -3087,8 +3045,6 @@
         $("themeToggle").innerHTML = `<i class="fa-regular ${dark ? "fa-sun" : "fa-moon"}"></i>`;
         $("themeToggle").setAttribute("aria-label", dark ? "Activar tema claro" : "Activar tema oscuro");
       });
-      $("exportButton").addEventListener("click", exportJson);
-      $("exportCsvButton").addEventListener("click", exportCsv);
       $("reflectionNote").value = localStorage.getItem(REFLECTION_KEY) || "";
       $("reflectionNote").addEventListener("change", () => {
         const noteVal = $("reflectionNote").value.trim();
