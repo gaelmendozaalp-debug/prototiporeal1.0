@@ -1032,11 +1032,21 @@
     .overview-hero::after { content: ""; position: absolute; width: 300px; height: 300px; right: -80px; top: -120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 68%); }
     .overview-hero h2 { font-size: 36px; }
     .overview-hero p { font-size: 15px; margin-top: 10px; }
-    .overview-stats { gap: 16px; margin: 20px 0; }
+    .overview-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
     .overview-stat { padding: 22px; border-radius: var(--r-lg); box-shadow: var(--sh-1); border-top: 3px solid var(--accent); transition: .2s; }
     .overview-stat:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
     .overview-stat span { font-size: 11px; }
     .overview-stat strong { font-size: 32px; margin-top: 10px; }
+    .impact-goal { margin: 26px 0 30px; }
+    .impact-goal-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; margin-bottom: 14px; }
+    .impact-goal-label { color: var(--text-soft); font-size: 13px; font-weight: 700; }
+    .impact-goal-value { display: flex; align-items: baseline; gap: 8px; }
+    .impact-goal-value strong { color: var(--text); font-size: 30px; line-height: 1.1; }
+    .impact-goal-value span { color: var(--text-soft); font-size: 14px; font-weight: 700; }
+    .impact-progress-track { height: 18px; overflow: hidden; border-radius: 999px; background: var(--surface-soft); }
+    :root:not(.dark) .impact-progress-track { border: 1px solid var(--line); }
+    .impact-progress-fill { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-strong)); transition: width .45s ease; }
+    .impact-progress-message { margin-top: 10px; color: var(--accent-strong); font-size: 14px; font-weight: 700; line-height: 1.4; }
     .overview-grid { gap: 20px; }
     .overview-panel { padding: 26px; }
     .overview-panel h3 { font-size: 16px; }
@@ -1560,10 +1570,19 @@
             <h2 id="overviewGreeting">Cada aporte cuenta.</h2>
             <p id="overviewCaption">Tu camino de servicio social se construye actividad por actividad.</p>
           </section>
+          <section class="impact-goal" aria-label="Progreso de horas de servicio social">
+            <div class="impact-goal-heading">
+              <span class="impact-goal-label">Progreso de servicio social</span>
+              <div class="impact-goal-value"><strong id="allDoneHours">0.0 h</strong><span id="impactGoalLabel">de 480 h</span></div>
+            </div>
+            <div class="impact-progress-track" id="impactProgressTrack" role="progressbar" aria-label="Progreso hacia la meta de servicio social" aria-valuemin="0" aria-valuemax="480" aria-valuenow="0">
+              <span class="impact-progress-fill" id="impactProgressFill"></span>
+            </div>
+            <p class="impact-progress-message" id="impactProgressMessage" aria-live="polite">Vamos comenzando</p>
+          </section>
           <div class="overview-stats">
             <article class="overview-stat"><span>Actividades planeadas</span><strong id="allActivityCount">0</strong></article>
             <article class="overview-stat"><span>Actividades completadas</span><strong id="allDoneCount">0</strong></article>
-            <article class="overview-stat"><span>Horas de impacto</span><strong id="allDoneHours">0.0 h</strong></article>
             <article class="overview-stat"><span>Días en movimiento</span><strong id="activeDaysCount">0</strong></article>
           </div>
           <div class="overview-grid">
@@ -2712,9 +2731,22 @@
         const completed = tasks.filter((task) => task.done);
         const hours = Object.keys(serviceTimers).reduce((sum, date) => sum + serviceHours(date), 0);
         const activeDays = Object.keys(serviceTimers).filter((date) => serviceHours(date) > 0).length;
+        const goal = Math.max(1, Number(TOTAL_HOURS_GOAL) || 480);
+        const progress = Math.min(100, Math.max(0, hours / goal * 100));
         $("allActivityCount").textContent = tasks.length;
         $("allDoneCount").textContent = completed.length;
         $("allDoneHours").textContent = `${formatHours(hours)} h`;
+        $("impactGoalLabel").textContent = `de ${formatHours(goal)} h`;
+        $("impactProgressFill").style.width = `${progress}%`;
+        $("impactProgressTrack").setAttribute("aria-valuemax", String(goal));
+        $("impactProgressTrack").setAttribute("aria-valuenow", String(Math.min(hours, goal).toFixed(1)));
+        $("impactProgressMessage").textContent = hours >= goal
+          ? "¡Lo lograste!"
+          : progress >= 75
+            ? "¡Casi lo logras!"
+            : progress >= 25
+              ? "No te rindas, cada hora cuenta."
+              : "Vamos comenzando, cada hora suma.";
         $("activeDaysCount").textContent = activeDays;
         $("overviewGreeting").textContent = completed.length
           ? `Ya diste ${completed.length} ${completed.length === 1 ? "paso" : "pasos"}.`
