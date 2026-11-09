@@ -29,10 +29,15 @@ async function ensureDatabaseConnection(req, res, next) {
 
 app.use('/api/auth', ensureDatabaseConnection, authRoutes);
 app.use('/api', ensureDatabaseConnection, apiRoutes);
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname));
+const publicDirectory = path.join(__dirname, 'public');
+app.use(express.static(publicDirectory, { index: false }));
+app.use('/public', express.static(publicDirectory, { index: false }));
 
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'intex.html'));
+});
+
+app.get('/intex.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'intex.html'));
 });
 
