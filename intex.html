@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Ingresa a SnapDuty para organizar tus actividades de servicio social.">
   <title>Iniciar sesión · SnapDuty</title>
+  <link rel="icon" type="image/jpeg" href="/Logo%20de%20SnapDuty.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -142,17 +143,30 @@
 
 body {
   margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background: #f7f8f6;
   font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .cl-login10-demo {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   box-sizing: border-box;
-  padding: 40px 16px;
+  padding: 12px;
   background: radial-gradient(40% 50% at 15% 20%, #f3dfe5, transparent 70%),
     radial-gradient(35% 45% at 85% 25%, #e8edf0, transparent 70%),
     radial-gradient(45% 50% at 60% 95%, #e4eee6, transparent 70%),
@@ -162,11 +176,13 @@ body {
 .cl-login10 {
   --cl-login10-ink: #29342f;
   --cl-login10-muted: #707a74;
-  --cl-login10-violet: #a95f78;
-  --cl-login10-violet-soft: #fbf0f3;
+  --cl-login10-violet: #e57373;
+  --cl-login10-violet-soft: #fff0f0;
+  --cl-login10-button-hover: #ef8585;
+  --cl-login10-button-edge: #c94f55;
   --cl-login10-error: #a85764;
   width: 100%;
-  max-width: 440px;
+  max-width: 1080px;
   box-sizing: border-box;
   padding: 32px clamp(20px, 6vw, 36px) 24px;
   border: 1px solid rgba(255, 255, 255, .8);
@@ -175,6 +191,8 @@ body {
   box-shadow: 0 24px 60px -24px rgba(76, 29, 149, .35);
   color: var(--cl-login10-ink);
   line-height: 1.5;
+  transform: scale(var(--login-scale, 1));
+  transform-origin: center;
 }
 
 .cl-login10 *,
@@ -215,14 +233,13 @@ body {
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: var(--cl-login10-violet);
+  background: transparent;
 }
 
 .cl-login10__logo img {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 
 .cl-login10__brand {
@@ -288,19 +305,74 @@ body {
 
 .cl-login10__panels {
   overflow: hidden;
+  min-height: 470px;
 }
 
 .cl-login10__panel {
+  min-height: 470px;
   padding-top: 24px;
   border-radius: 12px;
+  display: grid;
+  grid-template-columns: minmax(250px, .82fr) minmax(0, 1.18fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+
+.cl-login10__panel[hidden] {
+  display: none;
+}
+
+.cl-login10__art {
+  width: min(100%, 320px);
+  height: 320px;
+  object-fit: contain;
+  justify-self: center;
+}
+
+.cl-login10__form {
+  width: 100%;
+  max-width: 500px;
+  justify-self: center;
+}
+
+.cl-login10__form[data-form="signup"] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
+}
+
+.cl-login10__form[data-form="signup"] > :is(.cl-login10__title, [data-form-error], .cl-login10__submit, .cl-login10__swap) {
+  grid-column: 1 / -1;
+}
+
+.cl-login10__form[data-form="signup"] .cl-login10__field {
+  min-width: 0;
 }
 
 .cl-login10__panel.is-from-right {
-  animation: cl-login10-right .32s cubic-bezier(.3, .7, .2, 1);
+  animation: cl-login10-right .42s cubic-bezier(.2, .75, .25, 1) both;
 }
 
 .cl-login10__panel.is-from-left {
-  animation: cl-login10-left .32s cubic-bezier(.3, .7, .2, 1);
+  animation: cl-login10-left .42s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.cl-login10__panel.is-from-right .cl-login10__art,
+.cl-login10__panel.is-from-right .cl-login10__form {
+  animation: cl-login10-content-right .55s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.cl-login10__panel.is-from-left .cl-login10__art,
+.cl-login10__panel.is-from-left .cl-login10__form {
+  animation: cl-login10-content-left .55s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.cl-login10__panel .cl-login10__art {
+  animation-delay: .04s;
+}
+
+.cl-login10__panel .cl-login10__form {
+  animation-delay: .1s;
 }
 
 @keyframes cl-login10-right {
@@ -314,6 +386,28 @@ body {
   from {
     opacity: 0;
     transform: translateX(-40px);
+  }
+}
+
+@keyframes cl-login10-content-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cl-login10-content-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -438,25 +532,31 @@ body {
 
 .cl-login10__submit {
   width: 100%;
-  min-height: 50px;
+  min-height: 56px;
   margin-top: 6px;
-  border: 0;
-  border-radius: 14px;
+  padding: 14px 28px;
+  border: 2px solid var(--cl-login10-button-edge);
+  border-radius: 16px;
   background: var(--cl-login10-violet);
   color: #fff;
   font: inherit;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color .15s ease, transform .15s ease;
+  box-shadow: 0 6px 0 var(--cl-login10-button-edge);
+  transform: translateY(0);
+  transition: transform .1s ease, box-shadow .1s ease, background-color .1s ease;
 }
 
-.cl-login10__submit:hover {
-  background: #8e4d64;
+.cl-login10__submit:hover:not(:disabled) {
+  background: var(--cl-login10-button-hover);
+  transform: translateY(2px);
+  box-shadow: 0 4px 0 var(--cl-login10-button-edge);
 }
 
-.cl-login10__submit:active {
-  transform: scale(.99);
+.cl-login10__submit:active:not(:disabled) {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 var(--cl-login10-button-edge);
 }
 
 .cl-login10__swap {
@@ -562,20 +662,53 @@ body {
 }
 
 .cl-login10__demo button {
-  margin-left: 5px;
-  padding: 3px 6px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--cl-login10-violet);
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  margin: 12px 0 0;
+  padding: 12px 20px;
+  border: 2px solid var(--cl-login10-button-edge);
+  border-radius: 16px;
+  background: var(--cl-login10-violet);
+  color: #fff;
   font: inherit;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 6px 0 var(--cl-login10-button-edge);
+  transform: translateY(0);
+  transition: transform .1s ease, box-shadow .1s ease, background-color .1s ease;
 }
 
-.cl-login10__demo button:hover { background: var(--cl-login10-violet-soft); }
+.cl-login10__demo button:hover:not(:disabled) {
+  background: var(--cl-login10-button-hover);
+  transform: translateY(2px);
+  box-shadow: 0 4px 0 var(--cl-login10-button-edge);
+}
+.cl-login10__demo button:active:not(:disabled) {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 var(--cl-login10-button-edge);
+}
 .cl-login10__demo button:focus-visible { outline: 3px solid var(--cl-login10-violet); outline-offset: 2px; }
 .cl-login10__submit:disabled, .cl-login10__demo button:disabled { cursor: wait; opacity: .7; }
+
+@media (max-width: 760px) {
+  .cl-login10-demo { align-content: center; padding: 16px 12px; }
+  .cl-login10 { max-width: 620px; padding: 24px clamp(18px, 5vw, 32px); }
+  .cl-login10__panels, .cl-login10__panel { min-height: 600px; }
+  .cl-login10__panel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .cl-login10__art { width: min(100%, 150px); height: 150px; }
+  .cl-login10__form { max-width: 520px; }
+}
+
+@media (max-width: 520px) {
+  .cl-login10__form[data-form="signup"] { grid-template-columns: 1fr; }
+  .cl-login10__form[data-form="signup"] > * { grid-column: 1; }
+  .cl-login10__art { width: 120px; height: 120px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .cl-login10 *,
@@ -585,6 +718,18 @@ body {
     animation: none !important;
   }
 }
+
+.cl-login10__input {
+  border: 2px solid #000;
+}
+
+.cl-login10__input:hover {
+  border-color: #000;
+}
+
+.cl-login10__field.is-error .cl-login10__input {
+  border-color: var(--cl-login10-error);
+}
     </style>
 </head>
 <body>
@@ -592,7 +737,7 @@ body {
     <section class="cl-login10" aria-label="Cuenta de SnapDuty">
       <header class="cl-login10__head">
         <span class="cl-login10__logo" aria-hidden="true">
-          <img src="/logo.png" alt="">
+          <img src="/Logo%20de%20SnapDuty.jpg" alt="">
         </span>
         <p class="cl-login10__brand">SnapDuty</p>
         <p class="cl-login10__tagline">Servicio social con propósito</p>
@@ -606,6 +751,7 @@ body {
 
       <div class="cl-login10__panels">
         <div class="cl-login10__panel" role="tabpanel" id="cl-login10-panel-login" aria-labelledby="cl-login10-tab-login" tabindex="0">
+          <img class="cl-login10__art" src="/Gif%20inicio.gif" alt="Daino animado, mascota de SnapDuty">
           <form class="cl-login10__form" data-form="login" novalidate>
             <h1 class="cl-login10__title">Qué gusto verte</h1>
             <p class="cl-login10__error" data-form-error role="alert"></p>
@@ -633,6 +779,7 @@ body {
         </div>
 
         <div class="cl-login10__panel" role="tabpanel" id="cl-login10-panel-signup" aria-labelledby="cl-login10-tab-signup" tabindex="0" hidden>
+          <img class="cl-login10__art" src="/Daino%20Feliz.png" alt="Daino Feliz, mascota de SnapDuty">
           <form class="cl-login10__form" data-form="signup" novalidate>
             <h2 class="cl-login10__title">Crea tu cuenta</h2>
             <p class="cl-login10__error" data-form-error role="alert"></p>
@@ -691,17 +838,39 @@ body {
       const tablist = document.querySelector("[data-tablist]");
       const panels = [...document.querySelectorAll("[role='tabpanel']")];
       const liveRegion = document.querySelector("[data-live]");
+      const loginCard = document.querySelector(".cl-login10");
+      const loginShell = document.querySelector(".cl-login10-demo");
+
+      function fitLoginToViewport() {
+        loginShell.style.setProperty("--login-scale", "1");
+        const availableWidth = Math.max(1, loginShell.clientWidth - 24);
+        const availableHeight = Math.max(1, loginShell.clientHeight - 24);
+        const scale = Math.min(1, availableWidth / loginCard.offsetWidth, availableHeight / loginCard.offsetHeight);
+        loginShell.style.setProperty("--login-scale", String(scale));
+      }
+
+      fitLoginToViewport();
+      window.addEventListener("resize", fitLoginToViewport);
 
       function selectTab(name) {
         const selectedIndex = name === "signup" ? 1 : 0;
+        const currentIndex = tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true");
+        if (selectedIndex === currentIndex) return;
+
         tablist.classList.toggle("is-second", selectedIndex === 1);
         tabs.forEach((tab, index) => {
           const selected = index === selectedIndex;
           tab.setAttribute("aria-selected", String(selected));
           tab.tabIndex = selected ? 0 : -1;
         });
-        panels.forEach((panel, index) => { panel.hidden = index !== selectedIndex; });
-        panels[selectedIndex].querySelector("input")?.focus();
+        panels.forEach((panel, index) => {
+          panel.hidden = index !== selectedIndex;
+          panel.classList.remove("is-from-right", "is-from-left");
+        });
+        const direction = selectedIndex > currentIndex ? "is-from-right" : "is-from-left";
+        void panels[selectedIndex].offsetWidth;
+        panels[selectedIndex].classList.add(direction);
+        panels[selectedIndex].querySelector("input")?.focus({ preventScroll: true });
       }
 
       tabs.forEach((tab, index) => tab.addEventListener("click", () => selectTab(index === 1 ? "signup" : "login")));

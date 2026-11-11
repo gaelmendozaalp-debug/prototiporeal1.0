@@ -1,0 +1,9 @@
+{
+  "extends": "@ljharb/tsconfig/node",
+  "compilerOptions": {
+    "checkJs": false,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.js"],
+  "exclude": ["node_modules"]
+}
