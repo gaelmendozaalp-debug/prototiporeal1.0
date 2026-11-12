@@ -81,6 +81,7 @@
 
     * { box-sizing: border-box; }
     html { min-width: 0; background: var(--page); scroll-behavior: smooth; }
+    html, body, body * { -webkit-user-select: none; user-select: none; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -441,6 +442,18 @@
     .priority-high { background: var(--priority-high-bg); color: var(--priority-high-text); }
     .priority-medium { background: var(--priority-medium-bg); color: var(--priority-medium-text); }
     .priority-low { background: var(--priority-low-bg); color: var(--priority-low-text); }
+    .priority-tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 4px 10px; border: 0; border-radius: 999px;
+      color: #fff; font-size: 10px; font-weight: 800; line-height: 1.2;
+      white-space: nowrap;
+    }
+    .priority-tag.priority-high,
+    .activity-priority-button.priority-high { background: #c62828; color: #fff; }
+    .priority-tag.priority-medium,
+    .activity-priority-button.priority-medium { background: #a86d00; color: #fff; }
+    .priority-tag.priority-low,
+    .activity-priority-button.priority-low { background: #2563eb; color: #fff; }
     .status-tag { background: var(--accent-wash); color: var(--accent-strong); }
     .status-tag.done { background: color-mix(in srgb, var(--success) 13%, var(--surface)); color: var(--success); }
     .task-actions { display: flex; align-items: flex-start; gap: 3px; }
@@ -505,7 +518,7 @@
     .calendar-event { width: 100%; overflow: hidden; padding: 3px 5px; border-radius: 5px; background: var(--accent-light); color: var(--text); font-size: 7px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
     .dark .calendar-event { color: var(--text); }
     .calendar-more { color: var(--text-soft); font-size: 7px; }
-    .calendar-detail { margin-top: 15px; padding: 16px; border-radius: 15px; background: var(--surface-soft); }
+    .calendar-detail { margin-top: 15px; padding: 16px; border-radius: 15px; background: var(--surface-soft); scroll-margin-top: 20px; }
     .calendar-detail h3 { margin: 0; font-size: 11px; }
     .calendar-detail .agenda-list { padding-top: 4px; }
     .calendar-detail .task-row { padding: 10px 0; }
@@ -517,14 +530,25 @@
     .search-field { min-width: 180px; flex: 1; padding: 0 12px; }
     .filter-select { padding: 0 10px; }
     .activity-list { padding: 5px 18px; }
-    .activity-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); }
+    .activity-item {
+      --activity-priority-color: #dc2626;
+      display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: start;
+      margin: 10px 0; padding: 14px; border: 2px solid var(--activity-priority-color); border-left-width: 6px;
+      border-radius: 14px; background: color-mix(in srgb, var(--activity-priority-color) 4%, var(--surface));
+    }
+    .activity-item.priority-high { --activity-priority-color: #b42318; }
+    .activity-item.priority-medium { --activity-priority-color: #8a5a00; }
+    .activity-item.priority-low { --activity-priority-color: #1f743c; }
     .activity-item:last-child { border-bottom: 0; }
-    .activity-date { padding: 8px 4px; border-radius: 11px; background: var(--accent-wash); color: var(--accent-strong); text-align: center; }
-    .activity-date span { display: block; font-size: 7px; font-weight: 800; text-transform: uppercase; }
-    .activity-date strong { display: block; margin-top: 2px; font-size: 15px; }
-    .activity-title { font-size: 10px; font-weight: 800; }
-    .activity-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; color: var(--text-soft); font-size: 8px; }
-    .activity-actions { display: flex; gap: 3px; }
+    .activity-date { padding: 9px 5px; border: 2px solid var(--activity-priority-color); border-radius: 11px; background: color-mix(in srgb, var(--activity-priority-color) 13%, var(--surface)); color: var(--activity-priority-color); text-align: center; }
+    .activity-date span { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .activity-date strong { display: block; margin-top: 3px; font-size: 21px; line-height: 1.1; }
+    .activity-copy { min-width: 0; }
+    .activity-title { font-size: 15px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+    .activity-meta { display: flex; flex-wrap: wrap; gap: 7px 10px; margin-top: 7px; color: var(--text-soft); font-size: 12px; }
+    .activity-description { margin: 8px 0 0; color: var(--text); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+    .activity-priority-tag { display: inline-flex; margin-top: 8px; padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--activity-priority-color) 13%, var(--surface)); color: var(--activity-priority-color); font-size: 11px; font-weight: 800; }
+    .activity-actions { display: flex; gap: 4px; }
     .activity-actions .icon-button { width: 30px; height: 30px; border: 0; background: transparent; }
 
     .overview-hero { padding: 25px; border-radius: 14px; color: var(--hero-text); background: var(--hero); }
@@ -541,7 +565,12 @@
     .category-row { display: grid; grid-template-columns: 105px minmax(0, 1fr) 28px; align-items: center; gap: 9px; font-size: 8px; }
     .category-name { overflow: hidden; color: var(--text-soft); text-overflow: ellipsis; white-space: nowrap; }
     .category-track { height: 7px; overflow: hidden; border-radius: 99px; background: var(--accent-wash); }
-    .category-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+    .category-fill { height: 100%; border-radius: inherit; background: var(--category-color, var(--accent)); }
+    .category-row:nth-child(1) { --category-color: #dc2626; }
+    .category-row:nth-child(2) { --category-color: #e2a400; }
+    .category-row:nth-child(3) { --category-color: #2980b9; }
+    .category-row:nth-child(4) { --category-color: #27834a; }
+    .category-row:nth-child(5) { --category-color: #8251b5; }
     .category-count { color: var(--text-soft); text-align: right; }
     .reflection-card { padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
     .reflection-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--accent-wash); color: var(--accent-strong); }
@@ -601,6 +630,7 @@
     .category-field { min-width: 0; padding: 0; border: 0; }
     .category-field legend { margin-bottom: 8px; color: var(--text-soft); font-size: 9px; font-weight: 800; }
     .category-select { position: relative; }
+    .activity-filter-select { flex: 0 1 220px; min-width: 190px; }
     .category-select-trigger {
       width: 100%; min-height: 46px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
       border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); color: var(--text);
@@ -617,10 +647,10 @@
       display: grid; gap: 4px; max-height: 0; padding: 0 6px; overflow: hidden;
       border: 1px solid transparent; border-radius: 13px; background: var(--surface);
       box-shadow: 0 12px 28px rgba(20, 24, 34, .16); opacity: 0; transform: translateY(-7px);
-      visibility: hidden; transition: max-height .24s ease, padding .24s ease, opacity .18s ease, transform .24s ease, visibility 0s linear .24s;
+      visibility: hidden; transition: max-height .5s cubic-bezier(.2, .75, .25, 1), padding .5s ease, opacity .36s ease, transform .5s cubic-bezier(.2, .75, .25, 1), visibility 0s linear .5s;
     }
     .category-select.is-open .category-select-options {
-      max-height: 280px; padding: 6px; border-color: var(--line); opacity: 1; transform: translateY(0);
+      max-height: 320px; padding: 6px; border-color: var(--line); opacity: 1; transform: translateY(0);
       visibility: visible; transition-delay: 0s;
     }
     .category-option {
@@ -865,6 +895,7 @@
       .page-heading { align-items: flex-start; flex-direction: column; }
       .search-field { min-width: 100%; }
       .filter-select { flex: 1; }
+      .activity-filter-select { flex: 1 1 190px; min-width: 0; }
       .form-grid { grid-template-columns: 1fr; }
       .form-field.wide { grid-column: auto; }
       .modal-backdrop { align-items: start; padding: 12px; }
@@ -1225,7 +1256,7 @@
     .category-bars { gap: 16px; }
     .category-row { grid-template-columns: 150px minmax(0,1fr) 32px; font-size: 13px; gap: 14px; }
     .category-track { height: 10px; }
-    .category-fill { background: linear-gradient(90deg, var(--accent), var(--accent-strong)); }
+    .category-fill { background: linear-gradient(90deg, color-mix(in srgb, var(--category-color, var(--accent)) 70%, white), var(--category-color, var(--accent))); }
     .reflection-card { padding: 26px; border-radius: var(--r-lg); box-shadow: var(--sh-1); }
     .reflection-icon { width: 44px; height: 44px; font-size: 18px; }
     .reflection-card h3 { font-size: 21px; }
@@ -1651,6 +1682,270 @@
     .reflection-card textarea:focus, .category-select-trigger:focus-visible {
       border-color: #000;
     }
+    body, body * {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    body {
+      font-weight: 500;
+    }
+    body :where(h1, h2, h3, h4, p, a, span, label, button, input, textarea, select, option, li, small, strong, legend) {
+      -webkit-text-stroke: .2px currentColor;
+    }
+    input, textarea, [contenteditable="true"] {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    img {
+      -webkit-user-drag: none;
+      user-drag: none;
+    }
+    .category-select-trigger, .form-field select, .filter-select {
+      border: 2px solid color-mix(in srgb, var(--accent-strong) 78%, #000);
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 88%, #000));
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 4px 0 color-mix(in srgb, var(--accent-strong) 58%, #000), 0 7px 12px color-mix(in srgb, var(--accent-strong) 22%, transparent);
+      transition: transform .16s ease, background .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .category-select-trigger:hover, .category-select.is-open .category-select-trigger,
+    .form-field select:hover, .filter-select:hover {
+      border-color: color-mix(in srgb, var(--accent-strong) 72%, #000);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 90%, #000), var(--accent-strong));
+      color: #fff;
+      box-shadow: 0 5px 0 color-mix(in srgb, var(--accent-strong) 58%, #000), 0 9px 16px color-mix(in srgb, var(--accent-strong) 28%, transparent);
+      transform: translateY(-1px);
+    }
+    .category-select-trigger:active, .form-field select:active, .filter-select:active {
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--accent-strong) 58%, #000);
+      transform: translateY(3px);
+    }
+    .category-select-trigger .category-select-value,
+    .category-select-trigger .category-select-value.is-placeholder,
+    .category-select-trigger > i {
+      color: #fff;
+    }
+    .category-select-options {
+      border-color: color-mix(in srgb, var(--accent-strong) 30%, var(--line));
+      background: var(--surface);
+    }
+    .category-option {
+      border: 1px solid color-mix(in srgb, var(--accent-strong) 72%, #000);
+      background: linear-gradient(180deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 90%, #000));
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 2px 0 color-mix(in srgb, var(--accent-strong) 50%, #000);
+    }
+    .category-option:hover, .category-option[aria-selected="true"] {
+      border-color: color-mix(in srgb, var(--accent-strong) 72%, #000);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 88%, #000), var(--accent-strong));
+      color: #fff;
+    }
+    .category-option:active {
+      box-shadow: none;
+      transform: translateY(2px);
+    }
+    .form-field select option, .filter-select option {
+      background: var(--accent-strong);
+      color: #fff;
+      font-weight: 700;
+    }
+    .activity-toolbar .filter-select {
+      min-height: 46px;
+      padding: 10px 42px 10px 14px;
+      border: 2px solid color-mix(in srgb, var(--accent-strong) 78%, #000);
+      border-radius: 12px;
+      background-color: var(--accent-strong);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"), linear-gradient(180deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 88%, #000));
+      background-repeat: no-repeat;
+      background-position: right 14px center, center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 4px 0 color-mix(in srgb, var(--accent-strong) 58%, #000), 0 7px 12px color-mix(in srgb, var(--accent-strong) 22%, transparent);
+      appearance: none;
+      cursor: pointer;
+    }
+    .activity-toolbar .filter-select:hover {
+      background-color: var(--accent-strong);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"), linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 90%, #000), var(--accent-strong));
+      color: #fff;
+    }
+    .form-field select:focus, .filter-select:focus, .category-select-trigger:focus-visible {
+      border-color: color-mix(in srgb, var(--accent-strong) 78%, #000);
+      outline-color: color-mix(in srgb, var(--accent-strong) 42%, transparent);
+    }
+    #activityForm .form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 18px 16px;
+    }
+    #activityForm .form-field:not(.category-field) {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    #activityForm .form-field > label,
+    #activityForm .category-field legend {
+      min-height: 1.4em;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    #activityForm .form-field input:not([type="hidden"]),
+    #activityForm .category-select-trigger {
+      min-height: 48px;
+    }
+    #activityForm .form-field textarea {
+      min-height: 120px;
+    }
+    #activityForm .modal-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+    }
+    #activityForm .modal-actions-right {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    #activityForm .modal-actions > button,
+    #activityForm .modal-actions-right > button {
+      min-width: 130px;
+      min-height: 46px;
+    }
+    @media (max-width: 520px) {
+      #activityModal .activity-modal-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      #activityModal .activity-modal-art {
+        display: none;
+      }
+      #activityForm .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      #activityForm .form-field.wide {
+        grid-column: auto;
+      }
+      #activityForm .modal-actions {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
+      }
+      #activityForm .modal-actions-right {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      #activityForm .modal-actions > button,
+      #activityForm .modal-actions-right > button {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+    .confirmation-backdrop {
+      position: fixed; inset: 0; z-index: 10000; display: none; place-items: center;
+      padding: 20px; background: rgba(18, 19, 22, .58); backdrop-filter: blur(5px);
+    }
+    .confirmation-backdrop.open { display: grid; }
+    .confirmation-dialog {
+      width: min(100%, 440px); padding: 28px; border: 5px solid #000; border-radius: 22px;
+      background: var(--surface); color: var(--text); box-shadow: var(--sh-3); text-align: center;
+      animation: confirmation-enter .2s ease-out both;
+    }
+    .confirmation-daino {
+      display: block; width: 140px; height: 140px; margin: 0 auto 15px;
+      object-fit: contain;
+    }
+    .confirmation-dialog h2 { margin: 0; font-size: 21px; font-weight: 800; }
+    .confirmation-dialog p { margin: 10px 0 22px; color: var(--text-soft); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+    .confirmation-actions { display: flex; justify-content: center; gap: 10px; }
+    .confirmation-actions button { min-width: 120px; min-height: 44px; }
+    @keyframes confirmation-enter { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (max-width: 480px) {
+      .confirmation-dialog { padding: 22px 18px; }
+      .confirmation-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .confirmation-actions button { min-width: 0; }
+    }
+    .activity-item {
+      display: block; margin: 12px 0; padding: 0; overflow: hidden;
+      border: 5px solid var(--activity-outline-color);
+      border-radius: 17px;
+      background: var(--activity-outline-color) !important; color: #fff;
+    }
+    .activity-item:hover { background: var(--activity-outline-color) !important; }
+    .activity-item .status-tag.done { border: 1px solid rgba(255,255,255,.7); background: transparent; color: #fff; }
+    .activity-item.priority-high { --activity-priority-color: #c62828; }
+    .activity-item.priority-medium { --activity-priority-color: #a86d00; }
+    .activity-item.priority-low { --activity-priority-color: #1e7540; }
+    .activity-summary {
+      display: grid; grid-template-columns: 58px minmax(0, 1fr) 26px; align-items: center; gap: 14px;
+      width: 100%; min-height: 0; margin: 0; padding: 15px;
+      border: 0 !important; border-radius: 11px !important; outline: none !important;
+      background: var(--activity-outline-color) !important; background-image: none !important;
+      color: #fff !important; text-align: left; font: inherit; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      box-shadow: none !important; text-shadow: none; transform: none !important; transition: none !important;
+    }
+    #activityList .activity-summary:hover,
+    #activityList .activity-summary:active,
+    #activityList .activity-summary:focus,
+    #activityList .activity-summary:focus-visible,
+    #activityList .activity-summary:focus-within {
+      border: 0 !important; outline: none !important;
+      background: var(--activity-outline-color) !important; background-image: none !important;
+      color: #fff !important; box-shadow: none !important; transform: none !important;
+    }
+    #activityList .activity-summary::before,
+    #activityList .activity-summary::after {
+      display: none !important; content: none !important;
+    }
+    .activity-summary .activity-date { border: 1px solid rgba(255,255,255,.8); background: transparent; color: #fff; }
+    .activity-summary .activity-date { padding: 11px 6px; }
+    .activity-summary .activity-date span { font-size: 13px; }
+    .activity-summary .activity-date strong { margin-top: 5px; font-size: 30px; line-height: 1; }
+    .activity-summary .activity-copy { display: block; }
+    .activity-summary .activity-title { display: block; font-size: 20px; line-height: 1.35; }
+    .activity-summary .activity-meta { display: flex; gap: 8px 14px; margin-top: 9px; color: #fff; opacity: .95; font-size: 15px; }
+    .activity-summary .activity-expand-hint { display: inline-block; margin-top: 9px; color: #fff; font-size: 13px; font-weight: 800; }
+    .activity-expand-icon { display: grid; place-items: center; color: #fff; }
+    .activity-details { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; margin: 0 15px; padding: 13px 0 15px; border-top: 1px solid rgba(255,255,255,.65); color: #fff; }
+    #activityList .activity-details[hidden] { display: none; }
+    .activity-details-copy { min-width: 0; }
+    .activity-details .activity-description { margin-top: 0; color: #fff; font-size: 17px; line-height: 1.6; }
+    .activity-item .status-tag.done {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-left: 8px; padding: 8px 13px; border: 0; border-radius: 12px;
+      background: #58cc02; color: #fff; box-shadow: 0 4px 0 #58a700;
+      font-family: "DM Sans", "Segoe UI", sans-serif; font-size: 13px; font-weight: 800;
+      letter-spacing: .8px; line-height: 1.2; text-transform: uppercase; vertical-align: middle;
+    }
+    .activity-priority-button {
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-top: 8px; padding: 6px 12px; border: 0; border-radius: 999px;
+      color: #fff; font-size: 12px; font-weight: 800; line-height: 1.2;
+      white-space: nowrap;
+    }
+    .activity-details .activity-actions { justify-content: flex-end; gap: 7px; }
+    .activity-details .activity-actions .icon-button {
+      width: 40px; height: 40px; border: 1px solid currentColor; border-radius: 12px;
+      background: transparent; color: inherit; box-shadow: none; transform: none; transition: none;
+    }
+    .activity-details .activity-actions .icon-button:hover,
+    .activity-details .activity-actions .icon-button:active {
+      border-color: currentColor; background: transparent; color: inherit; box-shadow: none; transform: none;
+    }
+    @media (max-width: 520px) {
+      .activity-summary { grid-template-columns: 54px minmax(0, 1fr) 20px; gap: 10px; padding: 12px 10px; }
+      .activity-summary .activity-date { padding: 8px 4px; }
+      .activity-summary .activity-date span { font-size: 11px; }
+      .activity-summary .activity-date strong { font-size: 25px; }
+      .activity-summary .activity-title { font-size: 17px; }
+      .activity-summary .activity-meta { gap: 6px 10px; font-size: 13px; }
+      .activity-summary .activity-expand-hint { font-size: 12px; }
+      .activity-details .activity-description { font-size: 15px; }
+      .activity-item .status-tag.done { padding: 6px 9px; font-size: 11px; }
+      .activity-details { grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 10px; padding: 11px 0 12px; }
+      .activity-details .activity-actions { justify-content: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -1812,15 +2107,33 @@
           <div class="activity-toolbar">
             <label class="sr-only" for="activitySearch">Buscar actividades</label>
             <input class="search-field" id="activitySearch" type="search" placeholder="Buscar una actividad...">
-            <label class="sr-only" for="activityStatusFilter">Filtrar por estado</label>
-            <select class="filter-select" id="activityStatusFilter">
-              <option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="done">Completadas</option>
-            </select>
-            <label class="sr-only" for="activityCategoryFilter">Filtrar por categoría</label>
-            <select class="filter-select" id="activityCategoryFilter">
-              <option value="all">Todas las categorías</option>
-              <option>Atención comunitaria</option><option>Educación</option><option>Gestión</option><option>Investigación</option><option>Otro</option>
-            </select>
+            <input type="hidden" id="activityStatusFilter" value="all">
+            <div class="category-select activity-filter-select" id="activityStatusFilterSelect">
+              <button class="category-select-trigger" id="activityStatusFilterTrigger" type="button" aria-label="Filtrar por estado" aria-haspopup="listbox" aria-expanded="false" aria-controls="activityStatusFilterOptions">
+                <span class="category-select-value" id="activityStatusFilterValue">Todos los estados</span>
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              <div class="category-select-options" id="activityStatusFilterOptions" role="listbox" aria-label="Estados de actividad" aria-hidden="true">
+                <button class="category-option" type="button" role="option" data-status="all" aria-selected="true" tabindex="0"><i class="fa-solid fa-list" aria-hidden="true"></i><span>Todos los estados</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-status="pending" aria-selected="false" tabindex="-1"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Pendientes</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-status="done" aria-selected="false" tabindex="-1"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completadas</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+              </div>
+            </div>
+            <input type="hidden" id="activityCategoryFilter" value="all">
+            <div class="category-select activity-filter-select" id="activityCategoryFilterSelect">
+              <button class="category-select-trigger" id="activityCategoryFilterTrigger" type="button" aria-label="Filtrar por categoría" aria-haspopup="listbox" aria-expanded="false" aria-controls="activityCategoryFilterOptions">
+                <span class="category-select-value" id="activityCategoryFilterValue">Todas las categorías</span>
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              <div class="category-select-options" id="activityCategoryFilterOptions" role="listbox" aria-label="Categorías de actividad" aria-hidden="true">
+                <button class="category-option" type="button" role="option" data-category="all" aria-selected="true" tabindex="0"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Todas las categorías</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-category="Atención comunitaria" aria-selected="false" tabindex="-1"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i><span>Atención comunitaria</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-category="Educación" aria-selected="false" tabindex="-1"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Educación</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-category="Gestión" aria-selected="false" tabindex="-1"><i class="fa-solid fa-folder-open" aria-hidden="true"></i><span>Gestión</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-category="Investigación" aria-selected="false" tabindex="-1"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Investigación</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                <button class="category-option" type="button" role="option" data-category="Otro" aria-selected="false" tabindex="-1"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i><span>Otro</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+              </div>
+            </div>
           </div>
           <section class="panel activity-list" id="activityList"></section>
         </section>
@@ -1918,8 +2231,35 @@
               </fieldset>
               <div class="form-field"><label for="activityStart">Hora de inicio (opcional)</label><input id="activityStart" name="start" type="time"></div>
               <div class="form-field"><label for="activityEnd">Hora de término (opcional)</label><input id="activityEnd" name="end" type="time"></div>
-              <div class="form-field"><label for="activityPriority">Prioridad</label><select id="activityPriority" name="priority" required><option value="" selected disabled>Selecciona una prioridad</option><option value="medium">Normal</option><option value="high">Importante</option><option value="low">Cuando pueda</option></select></div>
-              <div class="form-field"><label for="activityDone">Estado</label><select id="activityDone" name="done" required><option value="" selected disabled>Selecciona un estado</option><option value="false">Planeada</option><option value="true">Completada</option></select></div>
+              <div class="form-field">
+                <label for="activityPriorityTrigger">Prioridad</label>
+                <input type="hidden" id="activityPriority" name="priority">
+                <div class="category-select" id="activityPrioritySelect">
+                  <button class="category-select-trigger" id="activityPriorityTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="activityPriorityOptions">
+                    <span class="category-select-value is-placeholder" id="activityPriorityValue">Selecciona una prioridad</span>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  </button>
+                  <div class="category-select-options" id="activityPriorityOptions" role="listbox" aria-label="Prioridades" aria-hidden="true">
+                    <button class="category-option" type="button" role="option" data-priority="high" aria-selected="false" tabindex="-1"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i><span>Alta</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                    <button class="category-option" type="button" role="option" data-priority="medium" aria-selected="false" tabindex="-1"><i class="fa-solid fa-minus" aria-hidden="true"></i><span>Media</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                    <button class="category-option" type="button" role="option" data-priority="low" aria-selected="false" tabindex="-1"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i><span>Baja</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="activityDoneTrigger">Estado</label>
+                <input type="hidden" id="activityDone" name="done">
+                <div class="category-select" id="activityDoneSelect">
+                  <button class="category-select-trigger" id="activityDoneTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="activityDoneOptions">
+                    <span class="category-select-value is-placeholder" id="activityDoneValue">Selecciona un estado</span>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  </button>
+                  <div class="category-select-options" id="activityDoneOptions" role="listbox" aria-label="Estados de actividad" aria-hidden="true">
+                    <button class="category-option" type="button" role="option" data-done="false" aria-selected="false" tabindex="-1"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Planeada</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                    <button class="category-option" type="button" role="option" data-done="true" aria-selected="false" tabindex="-1"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>Completada</span><i class="fa-solid fa-check category-option-check" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
               <div class="form-field wide"><label for="activityNotes">Notas (opcional)</label><textarea id="activityNotes" name="notes" maxlength="500" placeholder="Detalles, materiales o personas de contacto..."></textarea></div>
             </div>
             <div class="modal-actions">
@@ -1963,6 +2303,17 @@
       <div class="customization-actions">
         <button class="secondary-button" id="cancelCustomization" type="button">Cancelar</button>
         <button class="primary-button" id="acceptCustomization" type="button">Aceptar cambios</button>
+      </div>
+    </section>
+  </div>
+  <div class="confirmation-backdrop" id="confirmationBackdrop" aria-hidden="true">
+    <section class="confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmationTitle" aria-describedby="confirmationMessage">
+      <img class="confirmation-daino" src="/Daino.png" alt="Daino">
+      <h2 id="confirmationTitle">¿Confirmas esta acción?</h2>
+      <p id="confirmationMessage"></p>
+      <div class="confirmation-actions">
+        <button class="secondary-button" id="cancelConfirmation" type="button">Cancelar</button>
+        <button class="primary-button" id="acceptConfirmation" type="button">Confirmar</button>
       </div>
     </section>
   </div>
@@ -2118,6 +2469,16 @@
 
       const CATEGORIES = ["Atención comunitaria", "Educación", "Gestión", "Investigación", "Otro"];
       const $ = (id) => document.getElementById(id);
+      function resetScrollPosition(root = document) {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        if (root === document) return;
+        [root, ...root.querySelectorAll("*")].forEach((element) => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+        });
+      }
+      document.addEventListener("selectstart", (event) => event.preventDefault());
       const dateAtNoon = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
       const dateKey = (date) => {
         const d = dateAtNoon(date);
@@ -2130,6 +2491,8 @@
       const today = dateAtNoon(new Date());
       let tasks = loadTasks();
       let serviceTimers = loadServiceTimers();
+      let pendingConfirmation = null;
+      let confirmationReturnFocus = null;
       let selectedDate = dateKey(today);
       let weekOffset = 0;
       let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1, 12);
@@ -2469,6 +2832,34 @@
           showToast("No se pudo guardar el cronómetro en este navegador.", "error");
           return false;
         }
+      }
+
+      function openConfirmation(title, message, confirmLabel, onConfirm) {
+        pendingConfirmation = onConfirm;
+        confirmationReturnFocus = document.activeElement;
+        $("confirmationTitle").textContent = title;
+        $("confirmationMessage").textContent = message;
+        $("acceptConfirmation").textContent = confirmLabel;
+        $("confirmationBackdrop").classList.add("open");
+        resetScrollPosition($("confirmationBackdrop"));
+        $("confirmationBackdrop").setAttribute("aria-hidden", "false");
+        $("cancelConfirmation").focus();
+      }
+
+      function closeConfirmation() {
+        $("confirmationBackdrop").classList.remove("open");
+        $("confirmationBackdrop").setAttribute("aria-hidden", "true");
+        pendingConfirmation = null;
+        if (confirmationReturnFocus instanceof HTMLElement && confirmationReturnFocus.isConnected && confirmationReturnFocus.getClientRects().length) {
+          confirmationReturnFocus.focus();
+        }
+        confirmationReturnFocus = null;
+      }
+
+      function confirmPendingAction() {
+        const action = pendingConfirmation;
+        closeConfirmation();
+        if (action) action();
       }
 
       function showToast(message, type = "info") {
@@ -2938,7 +3329,7 @@
           <article class="task-row ${task.done ? "is-done" : ""}">
             <div class="task-time">${escapeHtml(formatTime(task))}</div><div class="task-rail"><span class="task-dot"></span></div>
             <div class="task-main">
-              <div class="task-title"><span class="task-title-text">${escapeHtml(task.title)}</span><span class="priority-tag priority-${escapeHtml(task.priority)}">${task.priority === "high" ? "Importante" : task.priority === "low" ? "Flexible" : "Normal"}</span><span class="status-tag ${task.done ? "done" : ""}">${task.done ? "Lista" : "Planeada"}</span></div>
+              <div class="task-title"><span class="task-title-text">${escapeHtml(task.title)}</span><span class="priority-tag priority-${escapeHtml(task.priority)}">${task.priority === "high" ? "Alta" : task.priority === "low" ? "Baja" : "Media"}</span><span class="status-tag ${task.done ? "done" : ""}">${task.done ? "Lista" : "Planeada"}</span></div>
               <div class="task-category">${escapeHtml(task.category)}${duration(task) ? ` · ${formatHours(duration(task))} h` : ""}</div>
               ${task.notes ? `<div class="task-note">${escapeHtml(task.notes)}</div>` : ""}
             </div>
@@ -3015,16 +3406,32 @@
           $("activityList").innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-list-check"></i></div><h3>${isEmpty ? "Tu lista empieza aquí." : "No encontramos actividades."}</h3><p>${isEmpty ? "Anota tus tareas, organiza tus horarios y lleva el ritmo de tu servicio social. Usa el botón Nueva actividad para empezar." : "Prueba con otra búsqueda o cambia los filtros."}</p></div>`;
           return;
         }
+        const activityOutlineColors = ["#7c3aed", "#2563eb", "#0891b2", "#16a34a", "#db2777", "#ea580c", "#4f46e5", "#0f766e"];
         $("activityList").innerHTML = filtered.map((task) => {
           const date = parseDate(task.date);
-          return `<article class="activity-item">
-            <div class="activity-date"><span>${date.toLocaleDateString("es-MX", { weekday: "short" })}</span><strong>${date.getDate()}</strong></div>
-            <div><div class="activity-title">${escapeHtml(task.title)}${task.done ? ' <span class="status-tag done">Lista</span>' : ""}</div>
-              <div class="activity-meta"><span>${escapeHtml(formatDate(date, { month: "short", year: "numeric" }))}</span><span>${escapeHtml(formatTime(task))}</span><span>${escapeHtml(task.category)}</span>${duration(task) ? `<span>${formatHours(duration(task))} h</span>` : ""}</div></div>
-            <div class="activity-actions">
-              <button class="icon-button" type="button" data-toggle-task="${escapeHtml(task.id)}" aria-label="${task.done ? "Marcar pendiente" : "Completar"}"><i class="fa-solid ${task.done ? "fa-rotate-left" : "fa-check"}"></i></button>
-              <button class="icon-button" type="button" data-edit-task="${escapeHtml(task.id)}" aria-label="Editar ${escapeHtml(task.title)}"><i class="fa-regular fa-pen-to-square"></i></button>
-              <button class="icon-button" type="button" data-delete-task="${escapeHtml(task.id)}" aria-label="Eliminar ${escapeHtml(task.title)}"><i class="fa-regular fa-trash-can"></i></button>
+          const priority = ["high", "medium", "low"].includes(task.priority) ? task.priority : "medium";
+          const priorityLabel = priority === "high" ? "Alta" : priority === "low" ? "Baja" : "Media";
+          const colorSeed = [...String(task.id)].reduce((seed, character) => (seed * 31 + character.charCodeAt(0)) >>> 0, 7);
+          const outlineColor = activityOutlineColors[colorSeed % activityOutlineColors.length];
+          const detailsId = `activity-details-${task.id}`;
+          return `<article class="activity-item priority-${priority}" style="--activity-outline-color:${outlineColor}">
+            <button class="activity-summary" type="button" data-activity-summary data-activity-title="${escapeHtml(task.title)}" aria-expanded="false" aria-controls="${escapeHtml(detailsId)}" aria-label="Ver detalles de ${escapeHtml(task.title)}">
+              <span class="activity-date"><span>${date.toLocaleDateString("es-MX", { weekday: "short" })}</span><strong>${date.getDate()}</strong></span>
+              <span class="activity-copy"><span class="activity-title">${escapeHtml(task.title)}${task.done ? ' <span class="status-tag done" aria-label="Actividad completada"><i class="fa-solid fa-check" aria-hidden="true"></i> Completada</span>' : ""}</span>
+                <span class="activity-meta"><span>${escapeHtml(formatDate(date, { month: "short", year: "numeric" }))}</span><span>${escapeHtml(formatTime(task))}</span><span>${escapeHtml(task.category)}</span>${duration(task) ? `<span>${formatHours(duration(task))} h</span>` : ""}</span>
+                <span class="activity-expand-hint">Ver detalles</span>
+              </span>
+              <span class="activity-expand-icon" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+            </button>
+            <div class="activity-details" id="${escapeHtml(detailsId)}" hidden>
+              <div class="activity-details-copy">${task.notes ? `<p class="activity-description">${escapeHtml(task.notes)}</p>` : ""}
+                <span class="activity-priority-button priority-${priority}">Importancia: ${priorityLabel}</span>
+              </div>
+              <div class="activity-actions">
+                <button class="icon-button" type="button" data-toggle-task="${escapeHtml(task.id)}" aria-label="${task.done ? "Marcar pendiente" : "Marcar como completada"}" title="${task.done ? "Marcar pendiente" : "Marcar como completada"}"><i class="fa-solid ${task.done ? "fa-rotate-left" : "fa-check"}"></i></button>
+                <button class="icon-button" type="button" data-edit-task="${escapeHtml(task.id)}" aria-label="Editar ${escapeHtml(task.title)}" title="Editar"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button class="icon-button" type="button" data-delete-task="${escapeHtml(task.id)}" aria-label="Eliminar ${escapeHtml(task.title)}" title="Eliminar"><i class="fa-regular fa-trash-can"></i></button>
+              </div>
             </div>
           </article>`;
         }).join("");
@@ -3075,7 +3482,8 @@
           : "Tu camino de servicio social se construye actividad por actividad.";
         const counts = CATEGORIES.map((category) => ({ category, count: tasks.filter((task) => task.category === category).length }));
         const max = Math.max(1, ...counts.map((entry) => entry.count));
-        $("categoryBars").innerHTML = counts.map((entry) => `<div class="category-row"><span class="category-name">${escapeHtml(entry.category)}</span><span class="category-track"><span class="category-fill" style="display:block;width:${entry.count / max * 100}%"></span></span><span class="category-count">${entry.count}</span></div>`).join("");
+        const categoryColors = ["#dc2626", "#e2a400", "#2980b9", "#27834a", "#8251b5", "#d05b8f"];
+        $("categoryBars").innerHTML = counts.map((entry, index) => `<div class="category-row" style="--category-color:${categoryColors[index % categoryColors.length]}"><span class="category-name">${escapeHtml(entry.category)}</span><span class="category-track"><span class="category-fill" style="display:block;width:${entry.count / max * 100}%"></span></span><span class="category-count">${entry.count}</span></div>`).join("");
       }
 
       function validateActivityTimeRange() {
@@ -3091,31 +3499,96 @@
       }
 
       function setActivityCategory(category) {
-        $("activityCategory").value = CATEGORIES.includes(category) ? category : "";
-        $("activityCategoryValue").textContent = $("activityCategory").value || "Selecciona un área";
-        $("activityCategoryValue").classList.toggle("is-placeholder", !$("activityCategory").value);
-        document.querySelectorAll("#activityCategoryOptions [data-category]").forEach((option) => {
-          const selected = option.dataset.category === $("activityCategory").value;
+        setActivityDropdownValue(
+          "activityCategory",
+          "activityCategoryValue",
+          "activityCategoryOptions",
+          "data-category",
+          CATEGORIES.includes(category) ? category : "",
+          "Selecciona un área"
+        );
+      }
+
+      function setActivityCategoryMenuOpen(open, focusOption = false) {
+        setActivityDropdownMenuOpen("activityCategorySelect", "activityCategoryTrigger", "activityCategoryOptions", "data-category", open, focusOption);
+      }
+
+      function setActivityDropdownValue(inputId, valueId, optionsId, dataAttribute, value, placeholder) {
+        const input = $(inputId);
+        const valueElement = $(valueId);
+        const options = $(optionsId);
+        input.value = value;
+        const selectedOption = [...options.querySelectorAll(`[${dataAttribute}]`)]
+          .find((option) => option.dataset[dataAttribute.slice(5)] === value);
+        valueElement.textContent = selectedOption?.querySelector("span")?.textContent || value || placeholder;
+        valueElement.classList.toggle("is-placeholder", !value);
+        options.querySelectorAll(`[${dataAttribute}]`).forEach((option) => {
+          const selected = option === selectedOption;
           option.setAttribute("aria-selected", String(selected));
           option.tabIndex = selected ? 0 : -1;
         });
       }
 
-      function setActivityCategoryMenuOpen(open, focusOption = false) {
-        const select = $("activityCategorySelect");
-        const trigger = $("activityCategoryTrigger");
-        const options = $("activityCategoryOptions");
-        const categoryOptions = [...options.querySelectorAll("[data-category]")];
-        const activeOption = options.querySelector('[aria-selected="true"]') || categoryOptions[0];
-        select.classList.toggle("is-open", open);
+      function setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, open, focusOption = false) {
+        const root = $(rootId);
+        const trigger = $(triggerId);
+        const options = $(optionsId);
+        const items = [...options.querySelectorAll(`[${dataAttribute}]`)];
+        const activeOption = options.querySelector('[aria-selected="true"]') || items[0];
+        root.classList.toggle("is-open", open);
         trigger.setAttribute("aria-expanded", String(open));
         options.setAttribute("aria-hidden", String(!open));
-        categoryOptions.forEach((option) => {
+        items.forEach((option) => {
           option.tabIndex = open && option === activeOption ? 0 : -1;
         });
-        if (focusOption && open) {
-          activeOption?.focus();
-        }
+        if (focusOption && open) activeOption?.focus();
+      }
+
+      function wireActivityDropdown({ rootId, triggerId, optionsId, inputId, valueId, dataAttribute, placeholder, onChange }) {
+        const root = $(rootId);
+        const trigger = $(triggerId);
+        const options = $(optionsId);
+        setActivityDropdownValue(inputId, valueId, optionsId, dataAttribute, $(inputId).value, placeholder);
+        setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, false);
+        trigger.addEventListener("click", () => {
+          const isOpen = trigger.getAttribute("aria-expanded") === "true";
+          setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, !isOpen, !isOpen);
+        });
+        trigger.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, true, true);
+          }
+        });
+        options.addEventListener("click", (event) => {
+          const option = event.target.closest(`[${dataAttribute}]`);
+          if (!option) return;
+          setActivityDropdownValue(inputId, valueId, optionsId, dataAttribute, option.dataset[dataAttribute.slice(5)], placeholder);
+          setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, false);
+          onChange?.();
+          trigger.focus();
+        });
+        options.addEventListener("keydown", (event) => {
+          const items = [...options.querySelectorAll(`[${dataAttribute}]`)];
+          const currentIndex = items.indexOf(event.target.closest(`[${dataAttribute}]`));
+          let nextIndex = currentIndex;
+          if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % items.length;
+          else if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + items.length) % items.length;
+          else if (event.key === "Home") nextIndex = 0;
+          else if (event.key === "End") nextIndex = items.length - 1;
+          else if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, false);
+            trigger.focus();
+            return;
+          } else return;
+          event.preventDefault();
+          items.forEach((item) => { item.tabIndex = -1; });
+          items[nextIndex].tabIndex = 0;
+          items[nextIndex].focus();
+        });
+        return root;
       }
 
       function openModal(task = null, date = selectedDate) {
@@ -3127,13 +3600,16 @@
         setActivityCategoryMenuOpen(false);
         $("activityStart").value = task?.start || "";
         $("activityEnd").value = task?.end || "";
-        $("activityPriority").value = task?.priority || "";
-        $("activityDone").value = task ? String(task.done) : "";
+        setActivityDropdownValue("activityPriority", "activityPriorityValue", "activityPriorityOptions", "data-priority", task?.priority || "", "Selecciona una prioridad");
+        setActivityDropdownValue("activityDone", "activityDoneValue", "activityDoneOptions", "data-done", task ? String(task.done) : "", "Selecciona un estado");
+        setActivityDropdownMenuOpen("activityPrioritySelect", "activityPriorityTrigger", "activityPriorityOptions", "data-priority", false);
+        setActivityDropdownMenuOpen("activityDoneSelect", "activityDoneTrigger", "activityDoneOptions", "data-done", false);
         $("activityNotes").value = task?.notes || "";
         $("modalTitle").textContent = task ? "Editar actividad" : "Nueva actividad";
         $("deleteFromModal").classList.toggle("hidden", !task);
         $("activityModal").classList.add("open");
-        window.setTimeout(() => $("activityTitle").focus(), 30);
+        resetScrollPosition($("activityModal"));
+        window.setTimeout(() => $("activityTitle").focus({ preventScroll: true }), 30);
       }
 
       function closeModal() {
@@ -3142,12 +3618,17 @@
         $("activityId").value = "";
         setActivityCategory("");
         setActivityCategoryMenuOpen(false);
+        setActivityDropdownValue("activityPriority", "activityPriorityValue", "activityPriorityOptions", "data-priority", "", "Selecciona una prioridad");
+        setActivityDropdownValue("activityDone", "activityDoneValue", "activityDoneOptions", "data-done", "", "Selecciona un estado");
+        setActivityDropdownMenuOpen("activityPrioritySelect", "activityPriorityTrigger", "activityPriorityOptions", "data-priority", false);
+        setActivityDropdownMenuOpen("activityDoneSelect", "activityDoneTrigger", "activityDoneOptions", "data-done", false);
       }
 
       function openCustomizationModal() {
         applyInterfacePreferences();
         customizationDraftSnapshot = { ...interfacePreferences };
         $("customizationBackdrop").classList.add("open");
+        resetScrollPosition($("customizationBackdrop"));
         $("closeCustomization").focus();
       }
 
@@ -3217,6 +3698,21 @@
       function toggleTask(id) {
         const task = tasks.find((entry) => entry.id === id);
         if (!task) return;
+        if (!task.done) {
+          openConfirmation(
+            "¿Marcar como completada?",
+            `¿Ya terminaste "${task.title}"?`,
+            "Sí, completar",
+            () => applyTaskToggle(id)
+          );
+          return;
+        }
+        applyTaskToggle(id);
+      }
+
+      function applyTaskToggle(id) {
+        const task = tasks.find((entry) => entry.id === id);
+        if (!task) return;
         tasks = tasks.map((entry) => entry.id === id ? { ...entry, done: !entry.done } : entry);
         if (persistTasks()) showToast(task.done ? "Actividad marcada como pendiente." : "¡Actividad completada! Buen trabajo.", "success");
         if (isMongoConnected) {
@@ -3227,7 +3723,17 @@
 
       function deleteTask(id) {
         const task = tasks.find((entry) => entry.id === id);
-        if (!task || !window.confirm(`¿Eliminar "${task.title}" de tu agenda?`)) return;
+        if (!task) return;
+        openConfirmation(
+          "¿Eliminar esta actividad?",
+          `Se eliminará "${task.title}" de tu agenda. Esta acción no se puede deshacer.`,
+          "Sí, eliminar",
+          () => applyTaskDeletion(id)
+        );
+      }
+
+      function applyTaskDeletion(id) {
+        if (!tasks.some((entry) => entry.id === id)) return;
         tasks = tasks.filter((entry) => entry.id !== id);
         if (persistTasks()) showToast("Actividad eliminada.", "info");
         if (isMongoConnected) {
@@ -3240,6 +3746,7 @@
         if (!["week", "calendar", "activities", "overview"].includes(view)) return;
         currentView = view;
         document.querySelectorAll(".view").forEach((element) => element.classList.toggle("active", element.id === `view-${view}`));
+        resetScrollPosition($(`view-${view}`));
         document.querySelectorAll(".nav-link").forEach((element) => {
           const active = element.dataset.view === view;
           element.classList.toggle("active", active);
@@ -3320,45 +3827,20 @@
         });
       });
       $("newActivityButton").addEventListener("click", () => openModal());
-      $("activityCategoryTrigger").addEventListener("click", () => {
-        const isOpen = $("activityCategoryTrigger").getAttribute("aria-expanded") === "true";
-        setActivityCategoryMenuOpen(!isOpen, !isOpen);
-      });
-      $("activityCategoryOptions").addEventListener("click", (event) => {
-        const option = event.target.closest("[data-category]");
-        if (!option) return;
-        setActivityCategory(option.dataset.category);
-        setActivityCategoryMenuOpen(false);
-        $("activityCategoryTrigger").focus();
-      });
-      $("activityCategoryTrigger").addEventListener("keydown", (event) => {
-        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-          event.preventDefault();
-          setActivityCategoryMenuOpen(true, true);
-        }
-      });
-      $("activityCategoryOptions").addEventListener("keydown", (event) => {
-        const options = [...$("activityCategoryOptions").querySelectorAll("[data-category]")];
-        const currentIndex = options.indexOf(event.target.closest("[data-category]"));
-        let nextIndex = currentIndex;
-        if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % options.length;
-        else if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + options.length) % options.length;
-        else if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-          setActivityCategoryMenuOpen(false);
-          $("activityCategoryTrigger").focus();
-          return;
-        } else return;
-        event.preventDefault();
-        options.forEach((option) => { option.tabIndex = -1; });
-        options[nextIndex].tabIndex = 0;
-        options[nextIndex].focus();
-      });
+      const activityDropdownConfigs = [
+        { rootId: "activityCategorySelect", triggerId: "activityCategoryTrigger", optionsId: "activityCategoryOptions", inputId: "activityCategory", valueId: "activityCategoryValue", dataAttribute: "data-category", placeholder: "Selecciona un área" },
+        { rootId: "activityPrioritySelect", triggerId: "activityPriorityTrigger", optionsId: "activityPriorityOptions", inputId: "activityPriority", valueId: "activityPriorityValue", dataAttribute: "data-priority", placeholder: "Selecciona una prioridad" },
+        { rootId: "activityDoneSelect", triggerId: "activityDoneTrigger", optionsId: "activityDoneOptions", inputId: "activityDone", valueId: "activityDoneValue", dataAttribute: "data-done", placeholder: "Selecciona un estado" },
+        { rootId: "activityStatusFilterSelect", triggerId: "activityStatusFilterTrigger", optionsId: "activityStatusFilterOptions", inputId: "activityStatusFilter", valueId: "activityStatusFilterValue", dataAttribute: "data-status", placeholder: "Todos los estados", onChange: renderActivities },
+        { rootId: "activityCategoryFilterSelect", triggerId: "activityCategoryFilterTrigger", optionsId: "activityCategoryFilterOptions", inputId: "activityCategoryFilter", valueId: "activityCategoryFilterValue", dataAttribute: "data-category", placeholder: "Todas las categorías", onChange: renderActivities }
+      ];
+      activityDropdownConfigs.forEach(wireActivityDropdown);
       document.addEventListener("click", (event) => {
-        if (!event.target.closest("#activityCategorySelect") && $("activityCategoryTrigger").getAttribute("aria-expanded") === "true") {
-          setActivityCategoryMenuOpen(false);
-        }
+        activityDropdownConfigs.forEach(({ rootId, triggerId, optionsId, dataAttribute }) => {
+          if (!$(rootId).contains(event.target) && $(triggerId).getAttribute("aria-expanded") === "true") {
+            setActivityDropdownMenuOpen(rootId, triggerId, optionsId, dataAttribute, false);
+          }
+        });
       });
       $("activityStart").addEventListener("input", () => {
         if ($("activityStart").value && $("activityEnd").value) {
@@ -3372,6 +3854,11 @@
       });
       $("closeModal").addEventListener("click", closeModal);
       $("cancelModal").addEventListener("click", closeModal);
+      $("cancelConfirmation").addEventListener("click", closeConfirmation);
+      $("acceptConfirmation").addEventListener("click", confirmPendingAction);
+      $("confirmationBackdrop").addEventListener("click", (event) => {
+        if (event.target === $("confirmationBackdrop")) closeConfirmation();
+      });
       $("activityForm").addEventListener("submit", submitActivity);
       $("activityModal").addEventListener("click", (event) => {
         if (event.target === $("activityModal")) closeModal();
@@ -3382,11 +3869,31 @@
         deleteTask(id);
       });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          if ($("activityCategoryTrigger").getAttribute("aria-expanded") === "true") {
+        if ($("confirmationBackdrop").classList.contains("open")) {
+          if (event.key === "Escape") {
             event.preventDefault();
-            setActivityCategoryMenuOpen(false);
-            $("activityCategoryTrigger").focus();
+            closeConfirmation();
+            return;
+          }
+          if (event.key === "Tab") {
+            const cancelButton = $("cancelConfirmation");
+            const acceptButton = $("acceptConfirmation");
+            if (event.shiftKey && document.activeElement === cancelButton) {
+              event.preventDefault();
+              acceptButton.focus();
+            } else if (!event.shiftKey && document.activeElement === acceptButton) {
+              event.preventDefault();
+              cancelButton.focus();
+            }
+            return;
+          }
+        }
+        if (event.key === "Escape") {
+          const openDropdown = activityDropdownConfigs.find(({ triggerId }) => $(triggerId).getAttribute("aria-expanded") === "true");
+          if (openDropdown) {
+            event.preventDefault();
+            setActivityDropdownMenuOpen(openDropdown.rootId, openDropdown.triggerId, openDropdown.optionsId, openDropdown.dataAttribute, false);
+            $(openDropdown.triggerId).focus();
             return;
           }
           closeModal();
@@ -3400,10 +3907,22 @@
 
       $("prevWeek").addEventListener("click", () => changeWeek(-1));
       $("nextWeek").addEventListener("click", () => changeWeek(1));
-      $("thisWeek").addEventListener("click", () => { weekOffset = 0; selectedDate = dateKey(today); renderAll(); });
+      $("thisWeek").addEventListener("click", () => {
+        const currentDate = dateAtNoon(new Date());
+        weekOffset = 0;
+        selectedDate = dateKey(currentDate);
+        monthCursor = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1, 12);
+        renderAll();
+        showToast("Estás viendo la semana actual.", "success");
+      });
       $("prevMonth").addEventListener("click", () => { monthCursor.setMonth(monthCursor.getMonth() - 1); renderCalendar(); });
       $("nextMonth").addEventListener("click", () => { monthCursor.setMonth(monthCursor.getMonth() + 1); renderCalendar(); });
-      $("calendarToday").addEventListener("click", () => { moveSelectedDate(dateKey(today)); setView("calendar"); });
+      $("calendarToday").addEventListener("click", () => {
+        const currentDate = dateAtNoon(new Date());
+        moveSelectedDate(dateKey(currentDate));
+        setView("calendar");
+        showToast("El calendario muestra la fecha de hoy.", "success");
+      });
 
       $("weekStrip").addEventListener("click", (event) => {
         const button = event.target.closest("[data-select-date]");
@@ -3411,7 +3930,26 @@
       });
       $("calendarGrid").addEventListener("click", (event) => {
         const button = event.target.closest("[data-calendar-date]");
-        if (button) moveSelectedDate(button.dataset.calendarDate);
+        if (button) {
+          moveSelectedDate(button.dataset.calendarDate);
+          window.requestAnimationFrame(() => {
+            $("calendarDayTitle").scrollIntoView({
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+              block: "start"
+            });
+          });
+        }
+      });
+      $("activityList").addEventListener("click", (event) => {
+        const summary = event.target.closest("[data-activity-summary]");
+        if (!summary) return;
+        const details = document.getElementById(summary.getAttribute("aria-controls"));
+        if (!details) return;
+        const expanded = summary.getAttribute("aria-expanded") !== "true";
+        summary.setAttribute("aria-expanded", String(expanded));
+        summary.setAttribute("aria-label", `${expanded ? "Ocultar detalles de" : "Ver detalles de"} ${summary.dataset.activityTitle}`);
+        summary.querySelector(".activity-expand-hint").textContent = expanded ? "Ocultar detalles" : "Ver detalles";
+        details.hidden = !expanded;
       });
       document.addEventListener("click", (event) => {
         const toggle = event.target.closest("[data-toggle-task]");
@@ -3425,8 +3963,6 @@
       });
 
       $("activitySearch").addEventListener("input", renderActivities);
-      $("activityStatusFilter").addEventListener("change", renderActivities);
-      $("activityCategoryFilter").addEventListener("change", renderActivities);
       $("dailyServicePanel").addEventListener("input", (event) => {
         if (event.target.id === "serviceStartTime" || event.target.id === "serviceTargetHours") updateEstimatedEnd();
       });
@@ -3444,6 +3980,7 @@
         document.querySelector('meta[name="theme-color"]').content = dark ? "#26272b" : "#f7f8f6";
         try {
           localStorage.setItem(THEME_KEY, themeVal);
+          localStorage.removeItem("snapduty_login_theme_override_v1");
           if (isMongoConnected) {
             apiFetch('/api/settings/theme', {
               method: "PUT",
@@ -3712,13 +4249,25 @@
             localStorage.setItem(REFLECTION_KEY, data.reflection);
           }
 
-          if (data.theme) {
-            const isDark = data.theme === "dark";
+          const loginThemeOverrideKey = "snapduty_login_theme_override_v1";
+          const loginThemeOverride = localStorage.getItem(loginThemeOverrideKey);
+          const themeToApply = ["dark", "light"].includes(loginThemeOverride) ? loginThemeOverride : data.theme;
+          if (themeToApply) {
+            const isDark = themeToApply === "dark";
             document.documentElement.classList.toggle("dark", isDark);
             document.querySelector('meta[name="theme-color"]').content = isDark ? "#26272b" : "#f7f8f6";
             $("themeToggle").innerHTML = `<i class="fa-regular ${isDark ? "fa-sun" : "fa-moon"}"></i>`;
             $("themeToggle").setAttribute("aria-label", isDark ? "Activar tema claro" : "Activar tema oscuro");
-            localStorage.setItem(THEME_KEY, data.theme);
+            localStorage.setItem(THEME_KEY, themeToApply);
+            if (loginThemeOverride && ["dark", "light"].includes(loginThemeOverride)) {
+              apiFetch("/api/settings/theme", {
+                method: "PUT",
+                body: JSON.stringify({ value: themeToApply })
+              }).then((response) => {
+                if (!response.ok) throw new Error("No se pudo sincronizar el tema elegido desde el inicio de sesión.");
+                localStorage.removeItem(loginThemeOverrideKey);
+              }).catch((error) => console.warn("No se pudo sincronizar el tema elegido desde el inicio de sesión:", error));
+            }
           }
 
           interfacePreferences = normalizeInterfacePreferences(null);

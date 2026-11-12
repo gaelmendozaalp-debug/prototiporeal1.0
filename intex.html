@@ -150,10 +150,74 @@ body {
   font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+html, body, body * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 html {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+.login-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 28px;
+  background: #ed1c24;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .45s ease, visibility .45s ease;
+}
+
+.login-loading-screen.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.login-loading-logo {
+  display: block;
+  width: min(58vw, 340px);
+  height: min(58vw, 340px);
+  border-radius: 22%;
+  background: #ed1c24;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 30px rgba(90, 0, 0, .25));
+  animation: login-logo-arrive .8s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.login-loading-indicator {
+  width: 72px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .35);
+}
+
+.login-loading-indicator::after {
+  display: block;
+  width: 42%;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  content: "";
+  animation: login-loading-progress .9s ease-in-out infinite;
+}
+
+@keyframes login-logo-arrive {
+  from { opacity: 0; transform: translateY(12px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes login-loading-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(250%); }
 }
 
 .cl-login10-demo {
@@ -730,9 +794,92 @@ html {
 .cl-login10__field.is-error .cl-login10__input {
   border-color: var(--cl-login10-error);
 }
+
+body, body * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  font-weight: 500;
+}
+
+body :where(h1, h2, h3, h4, p, a, span, label, button, input, textarea, select, option, li, small, strong, legend) {
+  -webkit-text-stroke: .12px currentColor;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+.login-theme-toggle {
+  position: fixed;
+  z-index: 20;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(65, 72, 78, .2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .92);
+  color: #29342f;
+  box-shadow: 0 5px 16px rgba(30, 35, 40, .15);
+  cursor: pointer;
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.login-theme-toggle:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(30, 35, 40, .2); }
+.login-theme-toggle:focus-visible { outline: 3px solid #c62828; outline-offset: 3px; }
+.login-theme-toggle svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+html.dark { color-scheme: dark; }
+html.dark body { background: #202126; }
+html.dark .cl-login10-demo {
+  background: radial-gradient(40% 50% at 15% 20%, #482b35, transparent 70%),
+    radial-gradient(35% 45% at 85% 25%, #2d343b, transparent 70%),
+    radial-gradient(45% 50% at 60% 95%, #293b32, transparent 70%),
+    #202126;
+}
+html.dark .cl-login10 {
+  --cl-login10-ink: #f3f4f6;
+  --cl-login10-muted: #b6bac2;
+  --cl-login10-violet-soft: #512e34;
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(39, 40, 46, .96);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .7);
+}
+html.dark .cl-login10__tabs { background: #303138; }
+html.dark .cl-login10__thumb { background: #494a53; }
+html.dark .cl-login10__input { border-color: #5b5d67; background: #303138; color: #f3f4f6; }
+html.dark .cl-login10__input:hover { border-color: #858894; }
+html.dark .cl-login10__demo { color: #c5c7ce; }
+html.dark .login-theme-toggle { border-color: #565862; background: #303138; color: #ffe08a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-loading-screen, .login-loading-logo, .login-loading-indicator::after {
+    transition-duration: .01ms;
+    animation-duration: .01ms;
+    animation-iteration-count: 1;
+  }
+}
+
     </style>
 </head>
 <body>
+  <div class="login-loading-screen" id="loginLoadingScreen" role="status" aria-label="Cargando SnapDuty">
+    <img class="login-loading-logo" src="/Logo%20de%20SnapDuty.jpg" alt="Logo de SnapDuty" fetchpriority="high">
+    <span class="login-loading-indicator" aria-hidden="true"></span>
+  </div>
+  <button class="login-theme-toggle" type="button" id="loginThemeToggle" aria-label="Activar tema oscuro" aria-pressed="false" title="Cambiar tema"></button>
   <main class="cl-login10-demo">
     <section class="cl-login10" aria-label="Cuenta de SnapDuty">
       <header class="cl-login10__head">
@@ -834,12 +981,59 @@ html {
 
       const TOKEN_KEY = "snapduty_auth_token_v1";
       const USER_KEY = "snapduty_auth_user_v1";
+      const THEME_KEY = "servicio_social_theme";
+      const LOGIN_THEME_OVERRIDE_KEY = "snapduty_login_theme_override_v1";
+      const themeToggle = document.getElementById("loginThemeToggle");
       const tabs = [...document.querySelectorAll("[role='tab']")];
       const tablist = document.querySelector("[data-tablist]");
       const panels = [...document.querySelectorAll("[role='tabpanel']")];
       const liveRegion = document.querySelector("[data-live]");
       const loginCard = document.querySelector(".cl-login10");
       const loginShell = document.querySelector(".cl-login10-demo");
+      window.setTimeout(() => {
+        document.getElementById("loginLoadingScreen").classList.add("is-hidden");
+      }, 2500);
+
+      function resetLoginScroll(root = document) {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        if (root === document) return;
+        [root, ...root.querySelectorAll("*")].forEach((element) => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+        });
+      }
+
+      document.addEventListener("selectstart", (event) => event.preventDefault());
+
+      function applyLoginTheme(isDark) {
+        document.documentElement.classList.toggle("dark", isDark);
+        themeToggle.setAttribute("aria-label", isDark ? "Activar tema claro" : "Activar tema oscuro");
+        themeToggle.setAttribute("aria-pressed", String(isDark));
+        themeToggle.innerHTML = isDark
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path></svg>'
+          : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"></path></svg>';
+      }
+
+      try {
+        applyLoginTheme(localStorage.getItem(THEME_KEY) === "dark");
+      } catch (error) {
+        console.error("No se pudo cargar el tema guardado:", error);
+        applyLoginTheme(false);
+      }
+
+      themeToggle.addEventListener("click", () => {
+        const isDark = !document.documentElement.classList.contains("dark");
+        applyLoginTheme(isDark);
+        try {
+          const theme = isDark ? "dark" : "light";
+          localStorage.setItem(THEME_KEY, theme);
+          localStorage.setItem(LOGIN_THEME_OVERRIDE_KEY, theme);
+        } catch (error) {
+          console.error("No se pudo guardar el tema elegido desde el inicio de sesión:", error);
+          liveRegion.textContent = "No se pudo guardar el tema elegido en este navegador.";
+        }
+      });
 
       function fitLoginToViewport() {
         loginShell.style.setProperty("--login-scale", "1");
@@ -867,6 +1061,7 @@ html {
           panel.hidden = index !== selectedIndex;
           panel.classList.remove("is-from-right", "is-from-left");
         });
+        resetLoginScroll(loginShell);
         const direction = selectedIndex > currentIndex ? "is-from-right" : "is-from-left";
         void panels[selectedIndex].offsetWidth;
         panels[selectedIndex].classList.add(direction);
