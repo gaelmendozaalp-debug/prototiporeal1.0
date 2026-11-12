@@ -66,7 +66,7 @@ router.post('/register', async (req, res) => {
       start: '09:00',
       end: '10:00',
       priority: 'high',
-      notes: 'Esta es tu primera actividad personal guardada en tu sesión de MongoDB.',
+      notes: 'Esta es tu primera actividad personal guardada en tu sesión.',
       done: false
     });
 
