@@ -2221,7 +2221,7 @@
               </div>
               <div class="impact-evidence-field">
                 <label for="impactServiceHours">¿Cuántas horas realizaste?</label>
-                <input id="impactServiceHours" type="number" min="0.01" step="0.25" placeholder="Ej. 30" required>
+                <input id="impactServiceHours" type="number" min="1" step="1" placeholder="Ej. 30" required>
               </div>
               <div class="impact-evidence-field impact-evidence-field-wide">
                 <label for="impactEvidenceFile">Evidencia fotográfica (opcional)</label>
@@ -3473,8 +3473,8 @@
           showToast("Selecciona uno o varios meses.", "error");
           return;
         }
-        if (!Number.isFinite(hours) || hours <= 0) {
-          showToast("Ingresa una cantidad de horas mayor que 0.", "error");
+        if (!Number.isInteger(hours) || hours <= 0) {
+          showToast("Ingresa una cantidad de horas enteras mayor que 0.", "error");
           return;
         }
 

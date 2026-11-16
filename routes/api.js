@@ -601,8 +601,8 @@ router.put('/monthly-advances', async (req, res) => {
     }
 
     const hours = Number(req.body.hours);
-    if (!Number.isFinite(hours) || hours <= 0) {
-      return res.status(400).json({ success: false, error: 'Las horas deben ser mayores que 0' });
+    if (!Number.isInteger(hours) || hours <= 0) {
+      return res.status(400).json({ success: false, error: 'Las horas deben ser enteras y mayores que 0' });
     }
 
     const monthKey = months.join(',');

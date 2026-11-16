@@ -26,7 +26,11 @@ const MonthlyServiceAdvanceSchema = new mongoose.Schema({
   hours: {
     type: Number,
     required: [true, 'Las horas son obligatorias'],
-    min: 0.01
+    min: 1,
+    validate: {
+      validator: Number.isInteger,
+      message: 'Las horas deben ser enteras'
+    }
   },
   evidence: {
     type: String,
