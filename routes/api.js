@@ -73,7 +73,19 @@ router.get('/bootstrap', async (req, res) => {
       Activity.find({ userId }).sort({ date: 1, start: 1 }).lean(),
       ServiceTimer.find({ userId }).lean(),
       HistoricalServiceHours.find({ userId }).sort({ date: -1 }).lean(),
-      MonthlyServiceAdvance.find({ userId }).sort({ monthKey: -1 }).select('_id months monthKey hours').lean(),
+      MonthlyServiceAdvance.aggregate([
+        { $match: { userId } },
+        { $sort: { monthKey: -1 } },
+        {
+          $project: {
+            _id: 1,
+            months: 1,
+            monthKey: 1,
+            hours: 1,
+            hasEvidence: { $eq: [{ $type: '$evidence' }, 'string'] }
+          }
+        }
+      ]),
       Setting.findOne({ userId, key: 'theme' }).lean(),
       Setting.findOne({ userId, key: 'reflection' }).lean(),
       Setting.findOne({ userId, key: 'interface' }).lean(),
@@ -128,7 +140,8 @@ router.get('/bootstrap', async (req, res) => {
           id: String(entry._id),
           months: entry.months,
           monthKey: entry.monthKey,
-          hours: entry.hours
+          hours: entry.hours,
+          hasEvidence: entry.hasEvidence
         })),
         theme: themeSetting ? themeSetting.value : 'dark',
         interfacePreferences: interfaceSetting ? interfaceSetting.value : null,
@@ -645,7 +658,8 @@ router.put('/monthly-advances', async (req, res) => {
         id: String(advance._id),
         months: advance.months,
         monthKey: advance.monthKey,
-        hours: advance.hours
+        hours: advance.hours,
+        hasEvidence: Boolean(advance.evidence)
       }
     });
   } catch (error) {

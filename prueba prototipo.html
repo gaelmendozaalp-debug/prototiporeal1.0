@@ -585,6 +585,19 @@
     .impact-evidence-preview span { color: var(--text-soft); font-size: 11px; }
     .impact-evidence-actions { display: flex; grid-column: 1 / -1; align-items: center; flex-wrap: wrap; gap: 12px; }
     .impact-evidence-actions p { flex: 1 1 220px; margin: 0; color: var(--text-soft); font-size: 11px; line-height: 1.5; }
+    .impact-service-history { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .impact-service-history h4 { margin: 0 0 10px; font-size: 13px; }
+    .impact-history-list { display: grid; gap: 8px; }
+    .impact-history-entry { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-soft); }
+    .impact-history-entry-info, .impact-history-entry-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .impact-history-entry-info { color: var(--text); font-size: 12px; }
+    .impact-history-entry-info strong { font-weight: 700; }
+    .impact-history-entry-info span, .impact-history-photo-status, .impact-history-empty { color: var(--text-soft); font-size: 11px; }
+    .impact-history-photo-status.is-saved { color: var(--success); font-weight: 700; }
+    .impact-history-photo { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+    .impact-history-photo[hidden] { display: none; }
+    .impact-history-photo img { display: block; width: min(100%, 320px); max-height: 280px; border-radius: 9px; object-fit: contain; }
+    .impact-history-empty { margin: 0; }
     .overview-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr); gap: 13px; }
     .overview-panel { padding: 18px; }
     .overview-panel h3 { margin: 0; font-size: 11px; }
@@ -2238,6 +2251,14 @@
                 <button class="primary-button" id="saveImpactHoursButton" type="submit"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Guardar horas</button>
               </div>
             </form>
+            <div class="impact-service-history" aria-labelledby="impactServiceHistoryTitle">
+              <h4 id="impactServiceHistoryTitle">Historial de adelantos</h4>
+              <div class="impact-history-list" id="impactServiceHistory" aria-live="polite"></div>
+              <div class="impact-history-photo" id="impactHistoryPhoto" hidden>
+                <img id="impactHistoryPhotoImage" alt="Foto guardada como evidencia de servicio social">
+                <button class="secondary-button" id="closeImpactHistoryPhoto" type="button">Cerrar foto</button>
+              </div>
+            </div>
           </section>
           <div class="overview-grid">
             <section class="panel overview-panel">
@@ -3383,6 +3404,30 @@
         }).join(", ");
       }
 
+      function renderImpactServiceHistory() {
+        const history = $("impactServiceHistory");
+        if (!monthlyServiceAdvances.length) {
+          history.innerHTML = '<p class="impact-history-empty">Aún no hay adelantos registrados.</p>';
+          return;
+        }
+
+        history.innerHTML = [...monthlyServiceAdvances]
+          .sort((a, b) => b.monthKey.localeCompare(a.monthKey))
+          .map(advance => {
+            const hasEvidence = Boolean(advance.hasEvidence || monthlyServiceEvidence[advance.monthKey]);
+            const months = escapeHtml(formatImpactMonths(advance.months));
+            const monthKey = escapeHtml(advance.monthKey);
+            const hours = escapeHtml(formatHours(Number(advance.hours)));
+            return `<article class="impact-history-entry">
+              <div class="impact-history-entry-info"><strong>${months}</strong><span>${hours} h</span></div>
+              <div class="impact-history-entry-actions">
+                <span class="impact-history-photo-status${hasEvidence ? " is-saved" : ""}">${hasEvidence ? "Foto guardada" : "Sin foto"}</span>
+                ${hasEvidence ? `<button class="secondary-button" type="button" data-view-impact-evidence="${monthKey}" aria-label="Ver foto guardada de ${months}">Ver foto</button>` : ""}
+              </div>
+            </article>`;
+          }).join("");
+      }
+
       async function loadImpactEvidence(months) {
         const requestId = ++impactEvidenceRequestId;
         const monthKey = months.join(",");
@@ -3523,6 +3568,7 @@
               monthlyServiceEvidence[monthKey] = monthlyServiceEvidence[existing.monthKey];
               delete monthlyServiceEvidence[existing.monthKey];
             }
+            advance.hasEvidence = Boolean(monthlyServiceEvidence[monthKey]);
 
             if ((evidence || (existing && existing.monthKey !== monthKey)) && !persistMonthlyServiceEvidence()) {
               monthlyServiceAdvances = previousAdvances;
@@ -3901,6 +3947,7 @@
       }
 
       function renderOverview() {
+        renderImpactServiceHistory();
         const completed = tasks.filter((task) => task.done);
         const serviceDates = new Set([...Object.keys(serviceTimers), ...Object.keys(historicalServiceHours)]);
         const hours = [...serviceDates].reduce((sum, date) => sum + serviceHours(date), 0)
@@ -4455,6 +4502,44 @@
         $("impactServiceHours").value = existing?.hours ?? "";
         $("impactEvidenceFile").value = "";
         loadImpactEvidence(months);
+      });
+      $("impactServiceHistory").addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-view-impact-evidence]");
+        if (!button) return;
+        const advance = monthlyServiceAdvances.find(entry => entry.monthKey === button.dataset.viewImpactEvidence);
+        if (!advance) return;
+
+        button.disabled = true;
+        button.textContent = "Cargando...";
+        try {
+          let evidence = monthlyServiceEvidence[advance.monthKey] || "";
+          if (isMongoConnected) {
+            const response = await apiFetch(`/api/monthly-advances/evidence?months=${encodeURIComponent(advance.monthKey)}`);
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.error || "No se pudo cargar la foto.");
+            evidence = typeof result.evidence === "string" ? result.evidence : "";
+          }
+          if (!evidence) {
+            advance.hasEvidence = false;
+            renderImpactServiceHistory();
+            throw new Error("No se encontró una foto guardada para este registro.");
+          }
+
+          $("impactHistoryPhotoImage").src = evidence;
+          $("impactHistoryPhoto").hidden = false;
+        } catch (error) {
+          console.error("No se pudo abrir la foto del historial:", error);
+          showToast(error.message || "No se pudo abrir la foto guardada.", "error");
+        } finally {
+          if (button.isConnected) {
+            button.disabled = false;
+            button.textContent = "Ver foto";
+          }
+        }
+      });
+      $("closeImpactHistoryPhoto").addEventListener("click", () => {
+        $("impactHistoryPhoto").hidden = true;
+        $("impactHistoryPhotoImage").removeAttribute("src");
       });
       $("impactEvidenceFile").addEventListener("change", async (event) => {
         const file = event.target.files[0];
