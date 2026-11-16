@@ -18,6 +18,10 @@ const HistoricalServiceHoursSchema = new mongoose.Schema({
     required: [true, 'Las horas son obligatorias'],
     min: 0.01,
     max: 24
+  },
+  evidence: {
+    type: String,
+    maxlength: 900000
   }
 }, {
   timestamps: true,

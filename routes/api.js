@@ -521,16 +521,50 @@ router.put('/historical-hours/:date', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Las horas deben ser mayores que 0 y no exceder 24' });
     }
 
+    const updates = { userId: req.user._id, date, hours };
+    if (req.body.evidence !== undefined) {
+      const match = typeof req.body.evidence === 'string'
+        ? /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(req.body.evidence)
+        : null;
+      if (!match || req.body.evidence.length > 900000) {
+        return res.status(400).json({ success: false, error: 'La evidencia debe ser una imagen JPEG válida y no exceder el tamaño permitido' });
+      }
+
+      const image = Buffer.from(match[1], 'base64');
+      if (image.length > 512 * 1024 || image.length < 3 || image[0] !== 0xff || image[1] !== 0xd8 || image[2] !== 0xff) {
+        return res.status(400).json({ success: false, error: 'La evidencia debe ser una imagen JPEG válida y no exceder el tamaño permitido' });
+      }
+      updates.evidence = req.body.evidence;
+    }
+
     const entry = await HistoricalServiceHours.findOneAndUpdate(
       { userId: req.user._id, date },
-      { $set: { userId: req.user._id, date, hours } },
+      { $set: updates },
       { upsert: true, returnDocument: 'after', runValidators: true }
     );
 
-    res.json({ success: true, entry });
+    res.json({ success: true, entry: { date: entry.date, hours: entry.hours } });
   } catch (error) {
     console.error('Error al guardar horas históricas de servicio:', error);
     res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+router.get('/historical-hours/:date/evidence', async (req, res) => {
+  try {
+    const { date } = req.params;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ success: false, error: 'La fecha no es válida' });
+    }
+
+    const entry = await HistoricalServiceHours.findOne(
+      { userId: req.user._id, date },
+      { evidence: 1, _id: 0 }
+    ).lean();
+    res.json({ success: true, evidence: entry?.evidence || null });
+  } catch (error) {
+    console.error('Error al obtener evidencia de horas históricas:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
