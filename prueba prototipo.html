@@ -575,6 +575,9 @@
     .impact-evidence-field label { color: var(--text-soft); font-size: 12px; font-weight: 700; }
     .impact-evidence-field input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); color: var(--text); font-size: 13px; }
     .impact-evidence-field-wide { grid-column: 1 / -1; }
+    .impact-month-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 190px; overflow-y: auto; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+    .impact-month-option { display: flex; min-width: 0; align-items: center; gap: 8px; color: var(--text); font-size: 12px; cursor: pointer; }
+    .impact-month-option input { width: 16px; height: 16px; flex: 0 0 16px; accent-color: var(--accent-strong); }
     .impact-evidence-help { margin: -5px 0 0; color: var(--text-soft); font-size: 11px; line-height: 1.5; }
     .impact-evidence-preview { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
     .impact-evidence-preview[hidden] { display: none; }
@@ -2209,11 +2212,12 @@
           </div>
           <section class="panel impact-evidence-panel" aria-labelledby="impactEvidenceTitle">
             <h3 id="impactEvidenceTitle">¿Realizaste adelanto de horas de servicio social?</h3>
-            <p>Registra el día y las horas que realizaste. Puedes adjuntar una foto como evidencia; las horas se sumarán automáticamente a tu progreso.</p>
+            <p>Registra los meses y las horas que realizaste. Puedes adjuntar una foto como evidencia; las horas se sumarán automáticamente a tu progreso.</p>
             <form class="impact-evidence-form" id="impactEvidenceForm">
-              <div class="impact-evidence-field">
-                <label for="impactServiceDate">Día del servicio</label>
-                <input id="impactServiceDate" type="date" required>
+              <div class="impact-evidence-field impact-evidence-field-wide">
+                <label id="impactServiceMonthsLabel">Meses en los que realizaste el servicio</label>
+                <div class="impact-month-picker" id="impactMonthsPicker" role="group" aria-labelledby="impactServiceMonthsLabel"></div>
+                <p class="impact-evidence-help">Selecciona uno o varios meses. Las horas indicadas son el total conjunto y se cuentan una sola vez.</p>
               </div>
               <div class="impact-evidence-field">
                 <label for="impactServiceHours">¿Cuántas horas realizaste?</label>
@@ -2230,7 +2234,7 @@
                 <button class="secondary-button" id="removeImpactEvidence" type="button">Quitar foto</button>
               </div>
               <div class="impact-evidence-actions">
-                <p>El registro de cada fecha se actualiza al volver a guardar ese mismo día.</p>
+                <p>Al volver a seleccionar meses guardados, se actualizará ese registro.</p>
                 <button class="primary-button" id="saveImpactHoursButton" type="submit"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Guardar horas</button>
               </div>
             </form>
@@ -2509,7 +2513,8 @@
       const THEME_KEY = "servicio_social_theme";
       const SERVICE_TIMERS_KEY = "marea_daily_service_timers_v1";
       const HISTORICAL_SERVICE_HOURS_KEY = "marea_historical_service_hours_v1";
-      const HISTORICAL_SERVICE_EVIDENCE_KEY = "marea_historical_service_evidence_v1";
+      const MONTHLY_SERVICE_ADVANCES_KEY = "marea_monthly_service_advances_v1";
+      const MONTHLY_SERVICE_EVIDENCE_KEY = "marea_monthly_service_evidence_v1";
       const REFLECTION_KEY = "marea_planner_reflection_v1";
       const TOKEN_KEY = "snapduty_auth_token_v1";
       const USER_KEY = "snapduty_auth_user_v1";
@@ -2549,7 +2554,8 @@
       let tasks = loadTasks();
       let serviceTimers = loadServiceTimers();
       let historicalServiceHours = loadHistoricalServiceHours();
-      let historicalServiceEvidence = loadHistoricalServiceEvidence();
+      let monthlyServiceAdvances = loadMonthlyServiceAdvances();
+      let monthlyServiceEvidence = loadMonthlyServiceEvidence();
       let pendingImpactEvidence = "";
       let savedImpactEvidence = "";
       let impactEvidenceRequestId = 0;
@@ -2582,7 +2588,8 @@
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
         currentUser = user;
-        historicalServiceEvidence = loadHistoricalServiceEvidence();
+        monthlyServiceAdvances = loadMonthlyServiceAdvances();
+        monthlyServiceEvidence = loadMonthlyServiceEvidence();
         pendingImpactEvidence = "";
         savedImpactEvidence = "";
         updateUserUI(user);
@@ -2591,14 +2598,16 @@
       }
 
       function clearAuthSession() {
-        localStorage.removeItem(historicalEvidenceStorageKey());
+        localStorage.removeItem(monthlyAdvancesStorageKey());
+        localStorage.removeItem(monthlyEvidenceStorageKey());
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         currentUser = null;
         tasks = [];
         serviceTimers = {};
         historicalServiceHours = {};
-        historicalServiceEvidence = {};
+        monthlyServiceAdvances = [];
+        monthlyServiceEvidence = {};
         pendingImpactEvidence = "";
         savedImpactEvidence = "";
         localStorage.removeItem(TASKS_KEY);
@@ -2753,26 +2762,56 @@
         }
       }
 
-      function historicalEvidenceStorageKey() {
+      function monthlyEvidenceStorageKey() {
         const user = currentUser || getCurrentUser();
         const userId = user?.id || user?._id;
-        return `${HISTORICAL_SERVICE_EVIDENCE_KEY}:${userId || "guest"}`;
+        return `${MONTHLY_SERVICE_EVIDENCE_KEY}:${userId || "guest"}`;
       }
 
-      function loadHistoricalServiceEvidence() {
+      function monthlyAdvancesStorageKey() {
+        const user = currentUser || getCurrentUser();
+        const userId = user?.id || user?._id;
+        return `${MONTHLY_SERVICE_ADVANCES_KEY}:${userId || "guest"}`;
+      }
+
+      function loadMonthlyServiceAdvances() {
         try {
-          const raw = localStorage.getItem(historicalEvidenceStorageKey());
+          const raw = localStorage.getItem(monthlyAdvancesStorageKey());
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error("El formato guardado no es una lista.");
+          return parsed.filter(advance =>
+            advance &&
+            typeof advance.id === "string" &&
+            Array.isArray(advance.months) &&
+            advance.months.length > 0 &&
+            advance.months.every(month => /^\d{4}-(0[1-9]|1[0-2])$/.test(month)) &&
+            advance.monthKey === [...new Set(advance.months)].sort().join(",") &&
+            Number.isFinite(Number(advance.hours)) &&
+            Number(advance.hours) > 0 &&
+            Number(advance.hours) <= 24
+          ).map(advance => ({ ...advance, hours: Number(advance.hours) }));
+        } catch (error) {
+          console.error("No se pudieron leer los adelantos mensuales:", error);
+          setTimeout(() => showToast("No se pudieron recuperar los adelantos mensuales guardados.", "error"), 0);
+          return [];
+        }
+      }
+
+      function loadMonthlyServiceEvidence() {
+        try {
+          const raw = localStorage.getItem(monthlyEvidenceStorageKey());
           if (!raw) return {};
           const parsed = JSON.parse(raw);
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("El formato guardado no es válido.");
-          return Object.fromEntries(Object.entries(parsed).filter(([date, evidence]) =>
-            /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+          return Object.fromEntries(Object.entries(parsed).filter(([monthKey, evidence]) =>
+            /^(?:\d{4}-(?:0[1-9]|1[0-2]),)*\d{4}-(?:0[1-9]|1[0-2])$/.test(monthKey) &&
             typeof evidence === "string" &&
             evidence.length <= 900000 &&
             /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(evidence)
           ));
         } catch (error) {
-          console.error("No se pudo leer la evidencia de horas históricas:", error);
+          console.error("No se pudo leer la evidencia de los adelantos mensuales:", error);
           setTimeout(() => showToast("No se pudo recuperar la evidencia guardada.", "error"), 0);
           return {};
         }
@@ -2957,13 +2996,24 @@
         }
       }
 
-      function persistHistoricalServiceEvidence() {
+      function persistMonthlyServiceEvidence() {
         try {
-          localStorage.setItem(historicalEvidenceStorageKey(), JSON.stringify(historicalServiceEvidence));
+          localStorage.setItem(monthlyEvidenceStorageKey(), JSON.stringify(monthlyServiceEvidence));
           return true;
         } catch (error) {
-          console.error("No se pudo guardar la evidencia de horas históricas:", error);
+          console.error("No se pudo guardar la evidencia de los adelantos mensuales:", error);
           showToast("No se pudo guardar la evidencia en este navegador. Libera espacio e inténtalo de nuevo.", "error");
+          return false;
+        }
+      }
+
+      function persistMonthlyServiceAdvances() {
+        try {
+          localStorage.setItem(monthlyAdvancesStorageKey(), JSON.stringify(monthlyServiceAdvances));
+          return true;
+        } catch (error) {
+          console.error("No se pudieron guardar los adelantos mensuales:", error);
+          showToast("No se pudieron guardar los adelantos mensuales en este navegador.", "error");
           return false;
         }
       }
@@ -3302,33 +3352,67 @@
         $("impactEvidenceImage").src = evidence;
         $("impactEvidenceCaption").textContent = pendingImpactEvidence
           ? "Vista previa de la foto que se guardará."
-          : "Evidencia guardada para este día.";
+          : "Evidencia guardada para estos meses.";
       }
 
-      async function loadImpactEvidence(date) {
+      function selectedImpactMonths() {
+        return [...$("impactMonthsPicker").querySelectorAll('input[type="checkbox"]:checked')]
+          .map(input => input.value)
+          .sort();
+      }
+
+      function overlappingImpactAdvances(months) {
+        const selected = new Set(months);
+        return monthlyServiceAdvances.filter(advance => advance.months.some(month => selected.has(month)));
+      }
+
+      function renderImpactMonthOptions() {
+        const options = [];
+        for (let offset = 0; offset < 120; offset++) {
+          const date = new Date(today.getFullYear(), today.getMonth() - offset, 1, 12);
+          const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          const label = date.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+          options.push(`<label class="impact-month-option"><input type="checkbox" value="${month}"><span>${escapeHtml(label)}</span></label>`);
+        }
+        $("impactMonthsPicker").innerHTML = options.join("");
+      }
+
+      function formatImpactMonths(months) {
+        return months.map(month => {
+          const [year, monthNumber] = month.split("-").map(Number);
+          return new Date(year, monthNumber - 1, 1, 12).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+        }).join(", ");
+      }
+
+      async function loadImpactEvidence(months) {
         const requestId = ++impactEvidenceRequestId;
+        const monthKey = months.join(",");
         pendingImpactEvidence = "";
         savedImpactEvidence = "";
         updateImpactEvidencePreview();
 
-        if (!date) return;
+        if (!months.length) return;
         if (!isMongoConnected) {
-          savedImpactEvidence = historicalServiceEvidence[date] || "";
+          const overlapping = overlappingImpactAdvances(months);
+          const existing = overlapping.length === 1 && overlapping[0].months.every(month => months.includes(month))
+            ? overlapping[0]
+            : null;
+          savedImpactEvidence = monthlyServiceEvidence[existing?.monthKey || monthKey] || "";
           updateImpactEvidencePreview();
           return;
         }
 
         try {
-          const response = await apiFetch(`/api/historical-hours/${date}/evidence`);
+          const response = await apiFetch(`/api/monthly-advances/evidence?months=${encodeURIComponent(monthKey)}`);
           const result = await response.json();
           if (!response.ok || !result.success) throw new Error(result.error || "No se pudo cargar la evidencia.");
-          if (requestId !== impactEvidenceRequestId || $("impactServiceDate").value !== date) return;
+          if (requestId !== impactEvidenceRequestId || selectedImpactMonths().join(",") !== monthKey) return;
           savedImpactEvidence = typeof result.evidence === "string" ? result.evidence : "";
           updateImpactEvidencePreview();
         } catch (error) {
           if (requestId !== impactEvidenceRequestId) return;
-          console.error("No se pudo cargar la evidencia del día:", error);
-          showToast(error.message || "No se pudo cargar la evidencia de este día.", "error");
+          console.error("No se pudo cargar la evidencia de los meses seleccionados:", error);
+          showToast(error.message || "No se pudo cargar la evidencia de los meses seleccionados.", "error");
         }
       }
 
@@ -3384,10 +3468,10 @@
 
       async function saveImpactServiceHours(event) {
         event.preventDefault();
-        const date = $("impactServiceDate").value;
+        const months = selectedImpactMonths();
         const hours = Number($("impactServiceHours").value);
-        if (!date || date > dateKey(today)) {
-          showToast("Selecciona un día válido que no sea futuro.", "error");
+        if (!months.length) {
+          showToast("Selecciona uno o varios meses.", "error");
           return;
         }
         if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
@@ -3395,43 +3479,61 @@
           return;
         }
 
+        const overlapping = overlappingImpactAdvances(months);
+        if (overlapping.length > 1 || (overlapping.length === 1 && !overlapping[0].months.every(month => months.includes(month)))) {
+          showToast("Para actualizar este registro, selecciona todos sus meses y agrega los nuevos si hace falta.", "error");
+          return;
+        }
+
         const evidence = pendingImpactEvidence;
-        const previousHours = historicalServiceHours[date];
-        const previousEvidence = historicalServiceEvidence[date];
+        const monthKey = months.join(",");
+        const existing = overlapping[0];
+        const previousAdvances = monthlyServiceAdvances;
+        const previousEvidence = { ...monthlyServiceEvidence };
         const saveButton = $("saveImpactHoursButton");
         saveButton.disabled = true;
         try {
           if (isMongoConnected) {
-            const body = { hours };
+            const body = { months, hours };
             if (evidence) body.evidence = evidence;
-            const response = await apiFetch(`/api/historical-hours/${date}`, {
+            const response = await apiFetch("/api/monthly-advances", {
               method: "PUT",
               body: JSON.stringify(body)
             });
             const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.error || "No se pudieron guardar las horas.");
-          }
-
-          historicalServiceHours[date] = hours;
-          if (evidence && !isMongoConnected) historicalServiceEvidence[date] = evidence;
-          if (isMongoConnected) {
-            persistHistoricalServiceHours();
+            if (!response.ok || !result.success || !result.advance) throw new Error(result.error || "No se pudieron guardar las horas.");
+            monthlyServiceAdvances = [
+              ...monthlyServiceAdvances.filter(advance => advance.id !== result.advance.id),
+              result.advance
+            ];
+            persistMonthlyServiceAdvances();
           } else {
-            if (evidence && !persistHistoricalServiceEvidence()) {
-              if (previousEvidence === undefined) delete historicalServiceEvidence[date];
-              else historicalServiceEvidence[date] = previousEvidence;
-              if (previousHours === undefined) delete historicalServiceHours[date];
-              else historicalServiceHours[date] = previousHours;
+            const advance = {
+              id: existing?.id || `local-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              months,
+              monthKey,
+              hours
+            };
+            monthlyServiceAdvances = [
+              ...monthlyServiceAdvances.filter(entry => entry.id !== existing?.id),
+              advance
+            ];
+            if (evidence) {
+              monthlyServiceEvidence[monthKey] = evidence;
+            } else if (existing && existing.monthKey !== monthKey && monthlyServiceEvidence[existing.monthKey]) {
+              monthlyServiceEvidence[monthKey] = monthlyServiceEvidence[existing.monthKey];
+              delete monthlyServiceEvidence[existing.monthKey];
+            }
+
+            if ((evidence || (existing && existing.monthKey !== monthKey)) && !persistMonthlyServiceEvidence()) {
+              monthlyServiceAdvances = previousAdvances;
+              monthlyServiceEvidence = previousEvidence;
               return;
             }
-            if (!persistHistoricalServiceHours()) {
-              if (previousHours === undefined) delete historicalServiceHours[date];
-              else historicalServiceHours[date] = previousHours;
-              if (evidence) {
-                if (previousEvidence === undefined) delete historicalServiceEvidence[date];
-                else historicalServiceEvidence[date] = previousEvidence;
-                persistHistoricalServiceEvidence();
-              }
+            if (!persistMonthlyServiceAdvances()) {
+              monthlyServiceAdvances = previousAdvances;
+              monthlyServiceEvidence = previousEvidence;
+              if (evidence || (existing && existing.monthKey !== monthKey)) persistMonthlyServiceEvidence();
               return;
             }
           }
@@ -3441,7 +3543,7 @@
           $("impactEvidenceFile").value = "";
           renderAll();
           updateImpactEvidencePreview();
-          showToast(`Se guardaron ${formatHours(hours)} horas para el ${formatDate(parseDate(date))}.`, "success");
+          showToast(`Se guardaron ${formatHours(hours)} horas para ${formatImpactMonths(months)}. El total se contó una sola vez.`, "success");
         } catch (error) {
           console.error("No se pudieron guardar las horas y su evidencia:", error);
           showToast(error.message || "No se pudieron guardar las horas.", "error");
@@ -3800,12 +3902,10 @@
       }
 
       function renderOverview() {
-        const impactDateInput = $("impactServiceDate");
-        impactDateInput.max = dateKey(today);
-        if (!impactDateInput.value) impactDateInput.value = dateKey(today);
         const completed = tasks.filter((task) => task.done);
         const serviceDates = new Set([...Object.keys(serviceTimers), ...Object.keys(historicalServiceHours)]);
-        const hours = [...serviceDates].reduce((sum, date) => sum + serviceHours(date), 0);
+        const hours = [...serviceDates].reduce((sum, date) => sum + serviceHours(date), 0)
+          + monthlyServiceAdvances.reduce((sum, advance) => sum + Number(advance.hours || 0), 0);
         const activeDays = [...serviceDates].filter((date) => serviceHours(date) > 0).length;
         const goal = Math.max(1, Number(TOTAL_HOURS_GOAL) || 480);
         const progress = Math.min(100, Math.max(0, hours / goal * 100));
@@ -4346,19 +4446,24 @@
         if (deleteHistorical) deleteHistoricalServiceHours(deleteHistorical.dataset.deleteHistoricalHours);
       });
       $("impactEvidenceForm").addEventListener("submit", saveImpactServiceHours);
-      $("impactServiceDate").addEventListener("change", (event) => {
-        const date = event.target.value;
-        $("impactServiceHours").value = historicalServiceHours[date] ?? "";
+      renderImpactMonthOptions();
+      $("impactMonthsPicker").addEventListener("change", () => {
+        const months = selectedImpactMonths();
+        const overlapping = overlappingImpactAdvances(months);
+        const existing = overlapping.length === 1 && overlapping[0].months.every(month => months.includes(month))
+          ? overlapping[0]
+          : null;
+        $("impactServiceHours").value = existing?.hours ?? "";
         $("impactEvidenceFile").value = "";
-        loadImpactEvidence(date);
+        loadImpactEvidence(months);
       });
       $("impactEvidenceFile").addEventListener("change", async (event) => {
         const file = event.target.files[0];
         if (!file) return;
-        const dateInput = $("impactServiceDate");
         const fileInput = $("impactEvidenceFile");
         const saveButton = $("saveImpactHoursButton");
-        dateInput.disabled = true;
+        const monthInputs = $("impactMonthsPicker").querySelectorAll('input[type="checkbox"]');
+        monthInputs.forEach(input => { input.disabled = true; });
         fileInput.disabled = true;
         saveButton.disabled = true;
         try {
@@ -4371,7 +4476,7 @@
           updateImpactEvidencePreview();
           showToast(error.message || "No se pudo preparar la foto.", "error");
         } finally {
-          dateInput.disabled = false;
+          monthInputs.forEach(input => { input.disabled = false; });
           fileInput.disabled = false;
           saveButton.disabled = false;
         }
@@ -4381,10 +4486,8 @@
         $("impactEvidenceFile").value = "";
         updateImpactEvidencePreview();
       });
-      $("impactServiceDate").max = dateKey(today);
-      $("impactServiceDate").value = dateKey(today);
       updateImpactEvidencePreview();
-      loadImpactEvidence($("impactServiceDate").value);
+      loadImpactEvidence(selectedImpactMonths());
       $("themeToggle").addEventListener("click", () => {
         const dark = document.documentElement.classList.toggle("dark");
         const themeVal = dark ? "dark" : "light";
@@ -4654,10 +4757,12 @@
           tasks = data.activities || [];
           serviceTimers = data.serviceTimers || {};
           historicalServiceHours = data.historicalServiceHours || {};
-          historicalServiceEvidence = {};
+          monthlyServiceAdvances = data.monthlyServiceAdvances || [];
+          monthlyServiceEvidence = {};
           localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
           localStorage.setItem(SERVICE_TIMERS_KEY, JSON.stringify(serviceTimers));
           localStorage.setItem(HISTORICAL_SERVICE_HOURS_KEY, JSON.stringify(historicalServiceHours));
+          persistMonthlyServiceAdvances();
 
           if (data.reflection !== undefined && data.reflection !== null && $("reflectionNote")) {
             $("reflectionNote").value = data.reflection;
@@ -4690,7 +4795,7 @@
           applyInterfacePreferences();
 
           renderAll();
-          if (!pendingImpactEvidence) loadImpactEvidence($("impactServiceDate").value);
+          if (!pendingImpactEvidence) loadImpactEvidence(selectedImpactMonths());
 
           if (Object.values(serviceTimers).some((timer) => !timer.endAt && !timer.pausedAt)) {
             if (timerInterval === null) timerInterval = window.setInterval(tickServiceTimer, 1000);

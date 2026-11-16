@@ -3,6 +3,7 @@ const router = express.Router();
 const Activity = require('../models/Activity');
 const ServiceTimer = require('../models/ServiceTimer');
 const HistoricalServiceHours = require('../models/HistoricalServiceHours');
+const MonthlyServiceAdvance = require('../models/MonthlyServiceAdvance');
 const Setting = require('../models/Setting');
 const Reflection = require('../models/Reflection');
 const authMiddleware = require('../middleware/auth');
@@ -23,6 +24,15 @@ function workedHours(timer, now = Date.now()) {
   const activeSince = timer.activeSince ?? (!timer.pausedAt && !timer.endAt ? timer.startAt : null);
   const activeMs = activeSince ? Math.max(0, now - Number(activeSince)) : 0;
   return Math.max(0, elapsedMs + activeMs) / 3600000;
+}
+
+function isValidMonth(month) {
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const monthNumber = Number(match[2]);
+  const parsed = new Date(Date.UTC(year, monthNumber - 1, 1));
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === monthNumber - 1;
 }
 
 // 1. Health & Connection Status (Público)
@@ -59,10 +69,11 @@ router.get('/bootstrap', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const [activities, timersList, historicalHoursList, themeSetting, reflectionSetting, interfaceSetting, recentReflections] = await Promise.all([
+    const [activities, timersList, historicalHoursList, monthlyAdvancesList, themeSetting, reflectionSetting, interfaceSetting, recentReflections] = await Promise.all([
       Activity.find({ userId }).sort({ date: 1, start: 1 }).lean(),
       ServiceTimer.find({ userId }).lean(),
       HistoricalServiceHours.find({ userId }).sort({ date: -1 }).lean(),
+      MonthlyServiceAdvance.find({ userId }).sort({ monthKey: -1 }).select('_id months monthKey hours').lean(),
       Setting.findOne({ userId, key: 'theme' }).lean(),
       Setting.findOne({ userId, key: 'reflection' }).lean(),
       Setting.findOne({ userId, key: 'interface' }).lean(),
@@ -113,6 +124,12 @@ router.get('/bootstrap', async (req, res) => {
         })),
         serviceTimers,
         historicalServiceHours: Object.fromEntries(historicalHoursList.map(entry => [entry.date, entry.hours])),
+        monthlyServiceAdvances: monthlyAdvancesList.map(entry => ({
+          id: String(entry._id),
+          months: entry.months,
+          monthKey: entry.monthKey,
+          hours: entry.hours
+        })),
         theme: themeSetting ? themeSetting.value : 'dark',
         interfacePreferences: interfaceSetting ? interfaceSetting.value : null,
         reflection: reflectionSetting ? reflectionSetting.value : "",
@@ -568,6 +585,101 @@ router.get('/historical-hours/:date/evidence', async (req, res) => {
   }
 });
 
+router.put('/monthly-advances', async (req, res) => {
+  try {
+    if (!Array.isArray(req.body.months) || req.body.months.length === 0 || req.body.months.length > 120) {
+      return res.status(400).json({ success: false, error: 'Selecciona uno o varios meses válidos' });
+    }
+
+    const months = [...new Set(req.body.months)].sort();
+    if (months.length !== req.body.months.length || !months.every(isValidMonth)) {
+      return res.status(400).json({ success: false, error: 'Selecciona uno o varios meses válidos' });
+    }
+    const latestMonth = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 7);
+    if (months.some(month => month > latestMonth)) {
+      return res.status(400).json({ success: false, error: 'No puedes seleccionar meses futuros' });
+    }
+
+    const hours = Number(req.body.hours);
+    if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
+      return res.status(400).json({ success: false, error: 'Las horas deben ser mayores que 0 y no exceder 24' });
+    }
+
+    const monthKey = months.join(',');
+    const overlapping = await MonthlyServiceAdvance.find({
+      userId: req.user._id,
+      months: { $in: months }
+    }).select('_id months').lean();
+    if (overlapping.length > 1 || (overlapping.length === 1 && !overlapping[0].months.every(month => months.includes(month)))) {
+      return res.status(409).json({
+        success: false,
+        error: 'Para actualizar este registro, selecciona todos sus meses y agrega los nuevos si hace falta.'
+      });
+    }
+
+    const updates = { userId: req.user._id, months, monthKey, hours };
+    if (req.body.evidence !== undefined) {
+      const match = typeof req.body.evidence === 'string'
+        ? /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(req.body.evidence)
+        : null;
+      if (!match || req.body.evidence.length > 900000) {
+        return res.status(400).json({ success: false, error: 'La evidencia debe ser una imagen JPEG válida y no exceder el tamaño permitido' });
+      }
+
+      const image = Buffer.from(match[1], 'base64');
+      if (image.length > 512 * 1024 || image.length < 3 || image[0] !== 0xff || image[1] !== 0xd8 || image[2] !== 0xff) {
+        return res.status(400).json({ success: false, error: 'La evidencia debe ser una imagen JPEG válida y no exceder el tamaño permitido' });
+      }
+      updates.evidence = req.body.evidence;
+    }
+
+    const existing = overlapping[0];
+    const advance = await MonthlyServiceAdvance.findOneAndUpdate(
+      existing ? { _id: existing._id, userId: req.user._id } : { userId: req.user._id, monthKey },
+      { $set: updates },
+      { upsert: !existing, returnDocument: 'after', runValidators: true }
+    );
+    res.json({
+      success: true,
+      advance: {
+        id: String(advance._id),
+        months: advance.months,
+        monthKey: advance.monthKey,
+        hours: advance.hours
+      }
+    });
+  } catch (error) {
+    console.error('Error al guardar adelanto mensual de horas:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+router.get('/monthly-advances/evidence', async (req, res) => {
+  try {
+    const rawMonths = typeof req.query.months === 'string' ? req.query.months.split(',') : [];
+    const months = [...new Set(rawMonths)].sort();
+    if (months.length === 0 || months.length > 120 || months.length !== rawMonths.length || !months.every(isValidMonth)) {
+      return res.status(400).json({ success: false, error: 'Selecciona uno o varios meses válidos' });
+    }
+
+    const overlapping = await MonthlyServiceAdvance.find({
+      userId: req.user._id,
+      months: { $in: months }
+    }).select('months evidence').lean();
+    if (overlapping.length > 1) {
+      return res.status(409).json({ success: false, error: 'Hay más de un registro que coincide con esos meses.' });
+    }
+    const existing = overlapping[0];
+    const evidence = existing && existing.months.every(month => months.includes(month))
+      ? existing.evidence || null
+      : null;
+    res.json({ success: true, evidence });
+  } catch (error) {
+    console.error('Error al obtener evidencia del adelanto mensual:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 router.delete('/historical-hours/:date', async (req, res) => {
   try {
     const result = await HistoricalServiceHours.findOneAndDelete({
@@ -714,10 +826,11 @@ router.get('/stats', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const [activities, timers, historicalHours] = await Promise.all([
+    const [activities, timers, historicalHours, monthlyAdvances] = await Promise.all([
       Activity.find({ userId }).lean(),
       ServiceTimer.find({ userId }).lean(),
-      HistoricalServiceHours.find({ userId }).lean()
+      HistoricalServiceHours.find({ userId }).lean(),
+      MonthlyServiceAdvance.find({ userId }).select('hours').lean()
     ]);
 
     const totalActivities = activities.length;
@@ -758,6 +871,9 @@ router.get('/stats', async (req, res) => {
     for (const entry of historicalHours) {
       activeDates.add(entry.date);
       totalTimerHours += Number(entry.hours.toFixed(2));
+    }
+    for (const advance of monthlyAdvances) {
+      totalTimerHours += Number(advance.hours.toFixed(2));
     }
 
     const totalGoal = req.user.totalHours || 480;
