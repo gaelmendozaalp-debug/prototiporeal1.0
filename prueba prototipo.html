@@ -3423,6 +3423,7 @@
               <div class="impact-history-entry-actions">
                 <span class="impact-history-photo-status${hasEvidence ? " is-saved" : ""}">${hasEvidence ? "Foto guardada" : "Sin foto"}</span>
                 ${hasEvidence ? `<button class="secondary-button" type="button" data-view-impact-evidence="${monthKey}" aria-label="Ver foto guardada de ${months}">Ver foto</button>` : ""}
+                <button class="secondary-button" type="button" data-delete-impact-advance="${monthKey}" aria-label="Eliminar adelanto de ${months}">Eliminar</button>
               </div>
             </article>`;
           }).join("");
@@ -3594,6 +3595,63 @@
           showToast(error.message || "No se pudieron guardar las horas.", "error");
         } finally {
           saveButton.disabled = false;
+        }
+      }
+
+      async function deleteImpactServiceAdvance(monthKey) {
+        const advance = monthlyServiceAdvances.find(entry => entry.monthKey === monthKey);
+        if (!advance) return;
+
+        const hours = Number(advance.hours);
+        if (!window.confirm(`¿Eliminar el adelanto de ${formatImpactMonths(advance.months)}? Se restarán ${formatHours(hours)} horas del total y se eliminará su foto guardada.`)) return;
+
+        const previousAdvances = monthlyServiceAdvances;
+        const previousEvidence = { ...monthlyServiceEvidence };
+        const hadEvidence = Object.hasOwn(monthlyServiceEvidence, monthKey);
+        const isServerAdvance = /^[a-f\d]{24}$/i.test(advance.id);
+        try {
+          if (isMongoConnected && isServerAdvance) {
+            const response = await apiFetch(`/api/monthly-advances/${encodeURIComponent(advance.id)}`, { method: "DELETE" });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.error || "No se pudo eliminar el adelanto.");
+          }
+
+          monthlyServiceAdvances = monthlyServiceAdvances.filter(entry => entry.monthKey !== monthKey);
+          delete monthlyServiceEvidence[monthKey];
+
+          if (isMongoConnected && isServerAdvance) {
+            persistMonthlyServiceAdvances();
+            if (hadEvidence) persistMonthlyServiceEvidence();
+          } else {
+            if (!persistMonthlyServiceAdvances()) {
+              monthlyServiceAdvances = previousAdvances;
+              monthlyServiceEvidence = previousEvidence;
+              return;
+            }
+            if (hadEvidence && !persistMonthlyServiceEvidence()) {
+              monthlyServiceAdvances = previousAdvances;
+              monthlyServiceEvidence = previousEvidence;
+              persistMonthlyServiceAdvances();
+              return;
+            }
+          }
+
+          if (selectedImpactMonths().some(month => advance.months.includes(month))) {
+            $("impactMonthsPicker").querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
+            $("impactServiceHours").value = "";
+            $("impactEvidenceFile").value = "";
+            pendingImpactEvidence = "";
+            savedImpactEvidence = "";
+            loadImpactEvidence([]);
+          }
+          $("impactHistoryPhoto").hidden = true;
+          $("impactHistoryPhotoImage").removeAttribute("src");
+          renderAll();
+          updateImpactEvidencePreview();
+          showToast(`Se restaron ${formatHours(hours)} horas del total y se eliminó el adelanto.`, "success");
+        } catch (error) {
+          console.error("No se pudo eliminar el adelanto de horas:", error);
+          showToast(error.message || "No se pudo eliminar el adelanto.", "error");
         }
       }
 
@@ -4504,6 +4562,14 @@
         loadImpactEvidence(months);
       });
       $("impactServiceHistory").addEventListener("click", async (event) => {
+        const deleteButton = event.target.closest("[data-delete-impact-advance]");
+        if (deleteButton) {
+          deleteButton.disabled = true;
+          await deleteImpactServiceAdvance(deleteButton.dataset.deleteImpactAdvance);
+          if (deleteButton.isConnected) deleteButton.disabled = false;
+          return;
+        }
+
         const button = event.target.closest("[data-view-impact-evidence]");
         if (!button) return;
         const advance = monthlyServiceAdvances.find(entry => entry.monthKey === button.dataset.viewImpactEvidence);

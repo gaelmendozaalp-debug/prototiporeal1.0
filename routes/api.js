@@ -668,6 +668,25 @@ router.put('/monthly-advances', async (req, res) => {
   }
 });
 
+router.delete('/monthly-advances/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!/^[a-f\d]{24}$/i.test(id)) {
+      return res.status(400).json({ success: false, error: 'El identificador del adelanto no es válido' });
+    }
+
+    const advance = await MonthlyServiceAdvance.findOneAndDelete({ _id: id, userId: req.user._id });
+    if (!advance) {
+      return res.status(404).json({ success: false, error: 'El adelanto no existe o ya fue eliminado' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al eliminar adelanto mensual de horas:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 router.get('/monthly-advances/evidence', async (req, res) => {
   try {
     const rawMonths = typeof req.query.months === 'string' ? req.query.months.split(',') : [];
