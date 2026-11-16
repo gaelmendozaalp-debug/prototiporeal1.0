@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Activity = require('../models/Activity');
 const ServiceTimer = require('../models/ServiceTimer');
+const HistoricalServiceHours = require('../models/HistoricalServiceHours');
 const Setting = require('../models/Setting');
 const Reflection = require('../models/Reflection');
 const authMiddleware = require('../middleware/auth');
@@ -58,9 +59,10 @@ router.get('/bootstrap', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const [activities, timersList, themeSetting, reflectionSetting, interfaceSetting, recentReflections] = await Promise.all([
+    const [activities, timersList, historicalHoursList, themeSetting, reflectionSetting, interfaceSetting, recentReflections] = await Promise.all([
       Activity.find({ userId }).sort({ date: 1, start: 1 }).lean(),
       ServiceTimer.find({ userId }).lean(),
+      HistoricalServiceHours.find({ userId }).sort({ date: -1 }).lean(),
       Setting.findOne({ userId, key: 'theme' }).lean(),
       Setting.findOne({ userId, key: 'reflection' }).lean(),
       Setting.findOne({ userId, key: 'interface' }).lean(),
@@ -110,6 +112,7 @@ router.get('/bootstrap', async (req, res) => {
           createdAt: a.createdAt
         })),
         serviceTimers,
+        historicalServiceHours: Object.fromEntries(historicalHoursList.map(entry => [entry.date, entry.hours])),
         theme: themeSetting ? themeSetting.value : 'dark',
         interfacePreferences: interfaceSetting ? interfaceSetting.value : null,
         reflection: reflectionSetting ? reflectionSetting.value : "",
@@ -499,6 +502,54 @@ router.post('/timers/bulk-sync', async (req, res) => {
   }
 });
 
+router.put('/historical-hours/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    const hours = Number(req.body.hours);
+    const [year, month, day] = date.split('-').map(Number);
+    const parsedDate = new Date(Date.UTC(year, month - 1, day));
+    const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date)
+      && parsedDate.getUTCFullYear() === year
+      && parsedDate.getUTCMonth() === month - 1
+      && parsedDate.getUTCDate() === day;
+
+    const latestDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    if (!validDate || date > latestDate) {
+      return res.status(400).json({ success: false, error: 'La fecha debe ser válida y no puede estar en el futuro' });
+    }
+    if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
+      return res.status(400).json({ success: false, error: 'Las horas deben ser mayores que 0 y no exceder 24' });
+    }
+
+    const entry = await HistoricalServiceHours.findOneAndUpdate(
+      { userId: req.user._id, date },
+      { $set: { userId: req.user._id, date, hours } },
+      { upsert: true, returnDocument: 'after', runValidators: true }
+    );
+
+    res.json({ success: true, entry });
+  } catch (error) {
+    console.error('Error al guardar horas históricas de servicio:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/historical-hours/:date', async (req, res) => {
+  try {
+    const result = await HistoricalServiceHours.findOneAndDelete({
+      userId: req.user._id,
+      date: req.params.date
+    });
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Registro histórico no encontrado' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al eliminar horas históricas de servicio:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 5. Ajustes y Preferencias del usuario
 router.get('/settings/:key', async (req, res) => {
   try {
@@ -629,9 +680,10 @@ router.get('/stats', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const [activities, timers] = await Promise.all([
+    const [activities, timers, historicalHours] = await Promise.all([
       Activity.find({ userId }).lean(),
-      ServiceTimer.find({ userId }).lean()
+      ServiceTimer.find({ userId }).lean(),
+      HistoricalServiceHours.find({ userId }).lean()
     ]);
 
     const totalActivities = activities.length;
@@ -668,6 +720,10 @@ router.get('/stats', async (req, res) => {
       activeDates.add(t.date);
       const hours = workedHours(t, now);
       totalTimerHours += Number(hours.toFixed(2));
+    }
+    for (const entry of historicalHours) {
+      activeDates.add(entry.date);
+      totalTimerHours += Number(entry.hours.toFixed(2));
     }
 
     const totalGoal = req.user.totalHours || 480;
