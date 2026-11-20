@@ -535,7 +535,11 @@ router.post('/timers/bulk-sync', async (req, res) => {
 router.put('/historical-hours/:date', async (req, res) => {
   try {
     const { date } = req.params;
-    const hours = Number(req.body.hours);
+    const hoursText = String(req.body.hours ?? '').trim();
+    const hoursMatch = /^(\d+)(?:\.(\d{1,2}))?$/.exec(hoursText);
+    const wholeHours = hoursMatch ? Number(hoursMatch[1]) : NaN;
+    const minutes = hoursMatch ? Number((hoursMatch[2] || '0').padEnd(2, '0')) : NaN;
+    const hours = hoursMatch ? Number(`${wholeHours}.${String(minutes).padStart(2, '0')}`) : NaN;
     const [year, month, day] = date.split('-').map(Number);
     const parsedDate = new Date(Date.UTC(year, month - 1, day));
     const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -547,8 +551,8 @@ router.put('/historical-hours/:date', async (req, res) => {
     if (!validDate || date > latestDate) {
       return res.status(400).json({ success: false, error: 'La fecha debe ser válida y no puede estar en el futuro' });
     }
-    if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
-      return res.status(400).json({ success: false, error: 'Las horas deben ser mayores que 0 y no exceder 24' });
+    if (!Number.isFinite(hours) || hours <= 0 || wholeHours > 24 || minutes > 59 || (wholeHours === 24 && minutes !== 0)) {
+      return res.status(400).json({ success: false, error: 'Las horas deben usar minutos válidos entre 00 y 59 y no exceder 24:00' });
     }
 
     const updates = { userId: req.user._id, date, hours };

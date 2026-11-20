@@ -228,7 +228,8 @@ html {
   height: 100vh;
   height: 100dvh;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
   padding: 12px;
   background: radial-gradient(40% 50% at 15% 20%, #f3dfe5, transparent 70%),
@@ -257,6 +258,7 @@ html {
   line-height: 1.5;
   transform: scale(var(--login-scale, 1));
   transform-origin: center;
+  margin: auto;
 }
 
 .cl-login10 *,
@@ -757,7 +759,7 @@ html {
 .cl-login10__submit:disabled, .cl-login10__demo button:disabled { cursor: wait; opacity: .7; }
 
 @media (max-width: 760px) {
-  .cl-login10-demo { align-content: center; padding: 16px 12px; }
+  .cl-login10-demo { place-items: start center; align-content: start; padding: 16px 12px; }
   .cl-login10 { max-width: 620px; padding: 24px clamp(18px, 5vw, 32px); }
   .cl-login10__panels, .cl-login10__panel { min-height: 600px; }
   .cl-login10__panel {
@@ -766,6 +768,20 @@ html {
   }
   .cl-login10__art { width: min(100%, 150px); height: 150px; }
   .cl-login10__form { max-width: 520px; }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .cl-login10-demo { padding: 8px 12px; }
+  .cl-login10 { padding: 16px 28px; }
+  .cl-login10__head { margin-bottom: 12px; }
+  .cl-login10__panels, .cl-login10__panel { min-height: 390px; }
+  .cl-login10__panel { padding-top: 12px; }
+  .cl-login10__art { width: min(100%, 270px); height: 270px; }
+  .cl-login10__title { margin-bottom: 10px; font-size: 22px; }
+  .cl-login10__field { margin-bottom: 8px; }
+  .cl-login10__input { min-height: 42px; padding-top: 8px; padding-bottom: 8px; }
+  .cl-login10__submit { min-height: 50px; padding-top: 10px; padding-bottom: 10px; }
+  .cl-login10__swap { margin-top: 10px; }
 }
 
 @media (max-width: 520px) {
@@ -1037,6 +1053,10 @@ html.dark .login-theme-toggle { border-color: #565862; background: #303138; colo
 
       function fitLoginToViewport() {
         loginShell.style.setProperty("--login-scale", "1");
+        if (window.matchMedia("(max-width: 760px)").matches) {
+          loginShell.scrollTop = 0;
+          return;
+        }
         const availableWidth = Math.max(1, loginShell.clientWidth - 24);
         const availableHeight = Math.max(1, loginShell.clientHeight - 24);
         const scale = Math.min(1, availableWidth / loginCard.offsetWidth, availableHeight / loginCard.offsetHeight);

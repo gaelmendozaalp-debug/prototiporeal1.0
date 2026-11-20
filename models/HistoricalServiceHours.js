@@ -17,7 +17,16 @@ const HistoricalServiceHoursSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Las horas son obligatorias'],
     min: 0.01,
-    max: 24
+    max: 24,
+    validate: {
+      validator(value) {
+        if (!Number.isFinite(value) || value <= 0 || value > 24) return false;
+        const whole = Math.floor(value);
+        const minutes = Math.round((value - whole) * 100);
+        return minutes >= 0 && minutes <= 59 && (whole !== 24 || minutes === 0);
+      },
+      message: 'Los minutos deben estar entre 00 y 59'
+    }
   },
   evidence: {
     type: String,

@@ -504,7 +504,7 @@
     .week-daino-panel { display: flex; flex-direction: column; min-height: 0; }
     .week-daino {
       display: block; width: min(100%, 180px); max-height: min(24vh, 180px);
-      margin: auto auto 0; object-fit: contain; flex: 0 1 auto;
+      margin: 18px auto 0; object-fit: contain; flex: 0 1 auto;
     }
 
     .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 0 0 22px; }
@@ -3146,7 +3146,24 @@
         return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
       }
 
-      function formatHours(hours) { return hours.toFixed(1); }
+      function formatHours(hours) {
+        return Number(hours).toFixed(2).replace(/(\.\d{2})0$/, "$1");
+      }
+
+      function normalizeHistoricalHours(rawValue) {
+        const text = String(rawValue).trim();
+        if (!/^\d+(?:\.\d{1,2})?$/.test(text)) return null;
+
+        const [wholeText, minuteText = ""] = text.split(".");
+        const whole = Number(wholeText);
+        const minutes = Number(minuteText.padEnd(2, "0")) || 0;
+
+        if (!Number.isInteger(whole) || whole < 0 || whole > 24 || minutes > 59) return null;
+        if (whole === 24 && minutes !== 0) return null;
+
+        const normalized = Number(`${whole}.${String(minutes).padStart(2, "0")}`);
+        return normalized > 0 ? normalized : null;
+      }
       function formatDate(date, options = { day: "numeric", month: "long" }) {
         return date.toLocaleDateString("es-MX", options);
       }
@@ -3247,7 +3264,7 @@
           <div><strong>¿Ya hiciste servicio antes?</strong><p>Agrega las horas y el día para sumarlos a tu progreso.</p></div>
           <div class="service-controls">
             <div class="service-time-field"><label for="historicalServiceDate">Día del servicio</label><input id="historicalServiceDate" type="date" max="${dateKey(today)}" value="${selectedDate}"></div>
-            <div class="service-time-field"><label for="historicalServiceHours">Horas realizadas (máx. 24)</label><input id="historicalServiceHours" type="number" min="0.01" max="24" step="0.25" placeholder="Ej. 3.5" value="${historicalServiceHours[selectedDate] ?? ""}"></div>
+            <div class="service-time-field"><label for="historicalServiceHours">Horas realizadas (máx. 24)</label><input id="historicalServiceHours" type="number" min="0.01" max="24" step="0.01" placeholder="Ej. 3.59" value="${historicalServiceHours[selectedDate] ?? ""}"></div>
             <button class="primary-button service-start" id="saveHistoricalServiceHours" type="button"><i class="fa-solid fa-plus"></i> Guardar horas</button>
           </div>
           ${historicalList}
@@ -3603,7 +3620,17 @@
         if (!advance) return;
 
         const hours = Number(advance.hours);
-        if (!window.confirm(`¿Eliminar el adelanto de ${formatImpactMonths(advance.months)}? Se restarán ${formatHours(hours)} horas del total y se eliminará su foto guardada.`)) return;
+        openConfirmation(
+          "¿Eliminar este adelanto?",
+          `Se eliminará el adelanto de ${formatImpactMonths(advance.months)}, se restarán ${formatHours(hours)} horas del total y se eliminará su foto guardada.`,
+          "Sí, eliminar",
+          () => deleteImpactServiceAdvanceConfirmed(monthKey)
+        );
+      }
+
+      async function deleteImpactServiceAdvanceConfirmed(monthKey) {
+        const advance = monthlyServiceAdvances.find(entry => entry.monthKey === monthKey);
+        if (!advance) return;
 
         const previousAdvances = monthlyServiceAdvances;
         const previousEvidence = { ...monthlyServiceEvidence };
@@ -3657,13 +3684,13 @@
 
       async function saveHistoricalServiceHours() {
         const date = $("historicalServiceDate").value;
-        const hours = Number($("historicalServiceHours").value);
+        const hours = normalizeHistoricalHours($("historicalServiceHours").value);
         if (!date || date > dateKey(today)) {
           showToast("Selecciona un día válido que no sea futuro.", "error");
           return;
         }
-        if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
-          showToast("Ingresa una cantidad de horas mayor que 0 y hasta 24.", "error");
+        if (hours === null) {
+          showToast("Ingresa horas válidas: los minutos después del punto deben estar entre 00 y 59.", "error");
           return;
         }
 
@@ -3687,7 +3714,15 @@
       }
 
       async function deleteHistoricalServiceHours(date) {
-        if (!window.confirm(`¿Eliminar las ${formatHours(historicalServiceHours[date] || 0)} horas registradas el ${formatDate(parseDate(date))}?`)) return;
+        openConfirmation(
+          "¿Eliminar estas horas?",
+          `Se eliminarán las ${formatHours(historicalServiceHours[date] || 0)} horas registradas el ${formatDate(parseDate(date))}.`,
+          "Sí, eliminar",
+          () => deleteHistoricalServiceHoursConfirmed(date)
+        );
+      }
+
+      async function deleteHistoricalServiceHoursConfirmed(date) {
         try {
           if (isMongoConnected) {
             const response = await apiFetch(`/api/historical-hours/${date}`, { method: "DELETE" });
@@ -3797,7 +3832,16 @@
       }
 
       function resetDailyService() {
-        if (!timerForDate(selectedDate) || !window.confirm("¿Corregir la hora de inicio? Se reiniciará el cronómetro de hoy.")) return;
+        if (!timerForDate(selectedDate)) return;
+        openConfirmation(
+          "¿Corregir la hora de inicio?",
+          "Se reiniciará el cronómetro de hoy y deberás ingresar nuevamente la hora de inicio.",
+          "Sí, corregir",
+          resetDailyServiceConfirmed
+        );
+      }
+
+      function resetDailyServiceConfirmed() {
         const timer = serviceTimers[selectedDate];
         delete serviceTimers[selectedDate];
         if (persistServiceTimers()) {
@@ -4537,6 +4581,15 @@
         if (event.target.id === "serviceStartTime" || event.target.id === "serviceTargetHours") updateEstimatedEnd();
         if (event.target.id === "historicalServiceDate") {
           $("historicalServiceHours").value = historicalServiceHours[event.target.value] ?? "";
+        }
+        if (event.target.id === "historicalServiceHours") {
+          const text = event.target.value;
+          const match = /^(\d+)\.(\d{1,2})$/.exec(text);
+          if (match) {
+            const whole = Number(match[1]);
+            const minutes = Math.min(59, Number(match[2].padEnd(2, "0")));
+            event.target.value = whole === 24 ? "24.00" : `${whole}.${String(minutes).padStart(2, "0")}`;
+          }
         }
       });
       $("dailyServicePanel").addEventListener("click", (event) => {
